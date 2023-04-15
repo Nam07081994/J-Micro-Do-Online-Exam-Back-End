@@ -1,0 +1,16 @@
+#server port
+server:
+  port: 8761
+
+#server name
+spring:
+  application.name: eureka-server
+
+#config eureka client to connect eureka server but fetchRegistry false
+eureka:
+  client:
+    registerWithEureka: false
+    fetchRegistry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+    enabled: true

@@ -1,0 +1,8 @@
+
+o	java:S120"ZRename this package name to match the regular expression '^[a-z_]+(\.[a-z_][a-z0-9_]*)*$'.(Êç´ë
+:
+java:S1118"Hide this public constructor.(Ò·÷8õºìŸø0
+L
+java:S3010"*Remove this assignment of "messageSource".(»®ê÷üÿÿÿÿ8÷ºìŸø0
+W
+java:S2209"5Change this instance-reference to a static reference.(»®ê÷üÿÿÿÿ8÷ºìŸø0

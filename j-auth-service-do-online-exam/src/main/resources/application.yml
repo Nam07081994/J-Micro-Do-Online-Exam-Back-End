@@ -1,0 +1,65 @@
+#server port
+server:
+  port: 8100
+
+#config for rabbit-mq
+spring:
+  application:
+    name: authorization-service
+  #  rabbitmq:
+  #    host: localhost
+  #    port: 5672
+  #    username: guest
+  #    password: guest
+  #    listener:
+  #      simple:
+  #        max-concurrency: 10
+  #        default-requeue-rejected: false
+  #        auto-startup: true
+  #        idle-event-interval: 5000
+  #        shutdown-timeout: 10000
+  #        acknowledge-mode: manual
+  #        prefetch: 10
+  #config connect DB
+  datasource:
+    url: jdbc:postgresql://localhost:5432/postgres
+    username: postgres
+    password: 12345
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: '228866512057-eunout12b3hr962mcmeuspl7cfjlnvh3.apps.googleusercontent.com'
+            client-secret: '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'
+
+            scope:
+              - email
+              - profile
+#config for eureka client connect to eureka server
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      default-zone: http://localhost:8761/eureka/
+    enabled: true
+
+app:
+  jwt:
+    secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+    expiration: 1000
+  i18n:
+    baseName: messages
+    defaultLocale: en

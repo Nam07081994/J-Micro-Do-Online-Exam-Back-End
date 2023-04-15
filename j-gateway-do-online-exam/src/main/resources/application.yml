@@ -1,0 +1,39 @@
+#server port
+server:
+  port: 8763
+
+#config eureka client to connect eureka server
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      default-zone: http://localhost:8761/eureka/
+    enabled: true
+
+#config cloud gateway for router
+spring:
+  main:
+    web-application-type: reactive
+  application.name: gate-way
+  cloud:
+    gateway:
+      routes:
+        - id: authorization-service
+          uri: http://localhost:8100/
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - AuthenticationFilter
+        - id: test-service
+          uri: http://localhost:8400/
+          predicates:
+            - Path=/test/**
+          filters:
+            - AuthenticationFilter
+app:
+  jwt:
+    secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
+  openApiEndPoints: /api/v1/auth/register,/api/v1/auth/login,/eureka
