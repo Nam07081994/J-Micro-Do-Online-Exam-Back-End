@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import com.example.demo.config.security.OauthCustom.CustomOAuth2UserService;
 import com.example.demo.config.security.OauthCustom.OAuthLoginSuccessHandler;
+import com.example.demo.config.security.SecurityCustom.CustomAuthenticationEntryPoint;
 import com.example.demo.config.security.SecurityCustom.CustomUserDetailsService;
 import com.example.demo.config.security.SecurityCustom.Filter.JwtTokenAuthenticationFilter;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,6 +44,8 @@ public class SecurityConfig {
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
         requestHandler.setCsrfRequestAttributeName("_csrf");
         httpSecurity
+                .exceptionHandling().authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+                .and()
                 .addFilterBefore(new JwtTokenAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .securityContext().requireExplicitSave(false)
                 .and().sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))

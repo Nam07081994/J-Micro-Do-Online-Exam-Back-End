@@ -34,7 +34,7 @@ public class JpaConfig {
         return () -> {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = REGISTERED_USER.get();
-            if (authentication.isAuthenticated() & username!=null) {
+            if (!authentication.isAuthenticated() & username!=null) {
                 return Optional.of(username);
             }
             removeRegisteredUser();

@@ -9,7 +9,7 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 public class JGatewayDoOnlineExamApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(JGatewayDoOnlineExamApplication.class, args);
+    SpringApplication.run(JGatewayDoOnlineExamApplication.class, args);
 	}
 
 }

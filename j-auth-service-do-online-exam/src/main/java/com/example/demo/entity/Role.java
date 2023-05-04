@@ -1,9 +1,9 @@
 package com.example.demo.entity;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import  java.time.LocalDateTime;
+import java.util.List;
 
+import com.example.demo.extra.ListStringJsonType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,13 +11,13 @@ import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -25,7 +25,7 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "tbl_role")
+@Table(name = "tbl_roles")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
@@ -58,6 +58,7 @@ public class Role {
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
-    @ManyToMany(mappedBy = "roles")
-    private Set<User> users = new HashSet<>();
+    @Type(ListStringJsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private List<String> endPoint;
 }

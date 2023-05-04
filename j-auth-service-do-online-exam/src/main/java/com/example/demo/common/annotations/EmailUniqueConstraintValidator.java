@@ -1,5 +1,7 @@
 package com.example.demo.common.annotations;
 
+import java.util.Objects;
+
 import com.example.demo.repository.UserRepository;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -17,9 +19,10 @@ public class EmailUniqueConstraintValidator implements ConstraintValidator<Email
 
     @Override
     public boolean isValid(String s, ConstraintValidatorContext constraintValidatorContext) {
-        Boolean a = userRepository.findByEmail(s)
-                .isEmpty();
-        return userRepository.findByEmail(s)
-                .isEmpty();
+        Boolean a = Objects.isNull(userRepository.findByEmail(s));
+        if(a == true){
+            return true;
+        }
+        return false;
     }
 }

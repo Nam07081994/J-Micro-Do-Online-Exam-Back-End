@@ -1,13 +1,17 @@
 package com.example.demo.controller;
 
+import java.util.Set;
+
 import com.example.demo.command.LoginCommand;
 import com.example.demo.command.RegisterCommand;
-import com.example.demo.common.response.CommonResponse;
 import com.example.demo.service.AuthenticationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -17,12 +21,17 @@ public class AuthenticationController {
     private AuthenticationService authenticationService;
 
     @PostMapping("/register")
-    public CommonResponse register(@RequestBody RegisterCommand command){
+    public ResponseEntity<?> register(@RequestBody RegisterCommand command){
         return authenticationService.resister(command);
     }
 
     @PostMapping("/login")
-    public CommonResponse login(@RequestBody LoginCommand command){
+    public ResponseEntity<?> login(@RequestBody LoginCommand command){
         return authenticationService.login(command);
+    }
+
+    @GetMapping("/getEndPoints")
+    public Set<String> getEndPoints(@RequestParam(name = "email") String email){
+        return authenticationService.getEndPoint(email);
     }
 }

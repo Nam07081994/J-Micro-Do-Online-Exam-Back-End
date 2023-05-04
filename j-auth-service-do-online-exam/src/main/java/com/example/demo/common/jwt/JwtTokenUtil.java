@@ -4,6 +4,7 @@ import java.security.Key;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -36,16 +37,17 @@ public class JwtTokenUtil {
     }
 
 
-    public static String generateToken(String email) {
+    public static String generateToken(String email, String role) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, email);
+        return createToken(claims, email, role);
     }
 
 
-    private static String createToken(Map<String, Object> claims, String email) {
+    private static String createToken(Map<String, Object> claims, String email, String roles) {
         return Jwts.builder()
                 .setClaims(claims)
-                .setSubject(email)
+                .setId(email)
+                .setSubject(roles)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration * 60 * 30))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();
@@ -95,11 +97,11 @@ public class JwtTokenUtil {
         return claimsResolver.apply(claims);
     }
 
-    private static Claims extractAllClaims(String token) {
+    public static Claims extractAllClaims(String token) {
         return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
     }
 
-    private static Boolean isTokenExpired(String token) {
+    public static Boolean isTokenExpired(String token) {
         final Date expiration = extractExpiration(token);
         return expiration.before(new Date());
     }
