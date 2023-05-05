@@ -25,14 +25,17 @@ public class EndPointService {
     public ResponseEntity<?> saveEndPoint(SaveEndPointCommand command){
         var endPointExist = endPointRepository.findByEndPoint(command.getEndPoint());
         if(endPointExist.isPresent()){
-            var error = CommonResponse.builder().body(Map.of("message", translationService.getTranslation(SAVE_FAILURE_INFORMATION))).build();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error.getBody());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder()
+                    .body(Map.of("message", translationService.getTranslation(SAVE_FAILURE_INFORMATION)))
+                    .build()
+                    .getBody());
         }
         EndPoint endPoint = new EndPoint();
         endPoint.setEndPoint(command.getEndPoint());
         endPointRepository.save(endPoint);
-        var response = CommonResponse.builder().body(Map.of("message", translationService.getTranslation(SAVE_SUCCESS_INFORMATION))).build();
-        //TODO: need add message
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response.getBody());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder()
+                .body(Map.of("message", translationService.getTranslation(SAVE_SUCCESS_INFORMATION)))
+                .build()
+                .getBody());
     }
 }
