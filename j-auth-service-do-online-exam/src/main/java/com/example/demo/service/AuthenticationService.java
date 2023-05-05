@@ -50,8 +50,10 @@ public class AuthenticationService {
     public ResponseEntity<?> resister(RegisterCommand command) {
         var userExist = userRepository.findByEmail(command.getEmail());
         if(userExist.isPresent()){
-            var error = CommonResponse.builder().body(Map.of("message", translationService.getTranslation(INVALID_REGISTER_INFORMATION))).build();
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error.getBody());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder()
+                    .body(Map.of("message", translationService.getTranslation(INVALID_REGISTER_INFORMATION)))
+                    .build()
+                    .getBody());
         }
         var user = User.builder()
                 .userName(command.getUserName())
@@ -61,8 +63,10 @@ public class AuthenticationService {
                 .build();
         JpaConfig.setRegisteredUser(user.getUserName());
         userRepository.save(user);
-        var response = CommonResponse.builder().body(Map.of("message", translationService.getTranslation(VALID_REGISTER_INFORMATION))).build();
-        return ResponseEntity.status(HttpStatus.OK).body(response.getBody());
+        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.builder()
+                .body(Map.of("message", translationService.getTranslation(VALID_REGISTER_INFORMATION)))
+                .build()
+                .getBody());
     }
 
     public ResponseEntity<?> login(LoginCommand command) {
@@ -71,11 +75,15 @@ public class AuthenticationService {
         if (authentication.isAuthenticated()) {
             var userRoles = userRepository.findByEmail(command.getEmail()).get().getRoles();
             var roles = String.join(",", userRoles);
-            var response = CommonResponse.builder().body(Map.of("access-token", JwtTokenUtil.generateToken(command.getEmail(), roles))).build();
-            return ResponseEntity.status(HttpStatus.OK).body(response.getBody());
+            return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.builder()
+                    .body(Map.of("access-token", JwtTokenUtil.generateToken(command.getEmail(), roles)))
+                    .build()
+                    .getBody());
         }
-        var error = CommonResponse.builder().body(Map.of("message", translationService.getTranslation(INVALID_LOGIN_INFORMATION))).build();
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error.getBody());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(CommonResponse.builder()
+                .body(Map.of("message", translationService.getTranslation(INVALID_LOGIN_INFORMATION)))
+                .build()
+                .getBody());
     }
 
     public Set<String> getEndPoint(String email){
