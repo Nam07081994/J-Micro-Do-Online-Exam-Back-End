@@ -1,6 +1,9 @@
 #server port
 server:
   port: 8763
+redis:
+  host: localhost
+  port: 6379
 
 #config eureka client to connect eureka server
 eureka:
@@ -16,7 +19,17 @@ eureka:
 #config cloud gateway for router
 spring:
   application.name: gate-way
+#config connect to redis
+  data:
+    redis:
+      host: localhost
+      port: 50988
+      connect-timeout: 2s
+      timeout: 1s
   cloud:
+    circuitbreaker:
+      resilience4j:
+        enabled: true
     gateway:
       routes:
         - id: authorization-service
@@ -30,7 +43,13 @@ spring:
           predicates:
             - Path=/test/**
           filters:
-            - AuthenticationFilter
+            - name: AuthenticationFilter
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 2
+
 app:
   secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
   openApiEndPoints: /api/v1/auth/register,/api/v1/auth/login,/eureka
