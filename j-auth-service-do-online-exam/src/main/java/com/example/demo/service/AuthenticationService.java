@@ -1,10 +1,6 @@
 package com.example.demo.service;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.example.demo.command.LoginCommand;
@@ -16,6 +12,7 @@ import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,13 +22,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import static com.example.demo.constant.TranslationCodeConstant.INVALID_LOGIN_INFORMATION;
-import static com.example.demo.constant.TranslationCodeConstant.INVALID_REGISTER_INFORMATION;
-import static com.example.demo.constant.TranslationCodeConstant.VALID_REGISTER_INFORMATION;
+import static com.example.demo.constant.TranslationCodeConstant.*;
 
 @Service
 public class AuthenticationService {
-
     @Autowired
     private UserRepository userRepository;
 
@@ -107,4 +101,26 @@ public class AuthenticationService {
         return targetEndPoints;
     }
 
+    public ResponseEntity<?> refreshToken(String token) throws JsonProcessingException {
+        var tokenExpired = JwtTokenUtil.isTokenExpired(token);
+        if (!tokenExpired) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder()
+                    .body(Map.of("message", translationService.getTranslation(INVALID_TOKEN_INFORMATION)))
+                    .build()
+                    .getBody());
+        }
+        var email = JwtTokenUtil.getEmailFromToken(token);
+        var userRoles = userRepository.findByEmail(email);
+        if (!userRoles.isPresent()){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder()
+                    .body(Map.of("message", translationService.getTranslation(INVALID_USER_DUPLICATE_INFORMATION)))
+                    .build()
+                    .getBody());
+        }
+        var roles = String.join(",", userRoles.get().getRoles());
+        return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.builder()
+                .body(Map.of("refresh-token", JwtTokenUtil.generateToken(email, roles)))
+                .build()
+                .getBody());
+    }
 }

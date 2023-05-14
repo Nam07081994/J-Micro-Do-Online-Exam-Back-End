@@ -24,7 +24,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/postgres
     username: postgres
-    password: 12345
+    password: 123456
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
@@ -59,7 +59,7 @@ eureka:
 app:
   jwt:
     secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
-    expiration: 1000
+    expiration: 1
   i18n:
     baseName: messages
     defaultLocale: en

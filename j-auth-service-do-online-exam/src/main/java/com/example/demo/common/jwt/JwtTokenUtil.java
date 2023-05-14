@@ -8,16 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.jwt.Jwt;
+import org.springframework.security.jwt.JwtHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -101,8 +103,28 @@ public class JwtTokenUtil {
         return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
     }
 
-    public static Boolean isTokenExpired(String token) {
-        final Date expiration = extractExpiration(token);
-        return expiration.before(new Date());
+//    public static Boolean isTokenExpired(String token) {
+//        final Date expiration = extractExpiration(token);
+//        return expiration.before(new Date());
+//    }
+
+    public static boolean isTokenExpired(String token) {
+        try {
+            Claims claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
+            Date expiration = claims.getExpiration();
+            return expiration.before(new Date());
+        } catch (ExpiredJwtException e) {
+            return true;
+        }
+    }
+
+    public static String getEmailFromToken(String token) throws JsonProcessingException {
+        Jwt jwt = JwtHelper.decode(token);
+        String claims = jwt.getClaims();
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> claimsMap =
+                objectMapper.readValue(claims, new TypeReference<Map<String, Object>>() {});
+        String email = claimsMap.get("jti").toString();
+        return email;
     }
 }
