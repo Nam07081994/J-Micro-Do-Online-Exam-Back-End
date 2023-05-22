@@ -32,6 +32,7 @@ public class JpaConfig {
     @Bean(name = "auditorProvider")
     public AuditorAware<String> auditorAware() {
         return () -> {
+            //TODO: Đoạn này đang sai logic cần fix lại sau
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             String username = REGISTERED_USER.get();
             if (!authentication.isAuthenticated() & username!=null) {

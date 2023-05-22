@@ -1,13 +1,16 @@
 package com.example.demo.entity;
 
-import  java.time.LocalDateTime;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.demo.extra.ListStringJsonType;
+import com.example.demo.Enum.QuestionType;
+import com.example.demo.extra.ListLongJsonType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -25,20 +28,38 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "tbl_roles")
+@Table(name = "tbl_questions")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Role {
+public class Question {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "role_name", nullable = false)
-    private String roleName;
+    @Column(name = "question_point", nullable = false)
+    private Integer questionPoint;
+
+    @Column(name = "question", nullable = false)
+    private String question;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "question_type", nullable = false)
+    private QuestionType questionType;
+
+    @Type(ListLongJsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private List<String> answers;
+
+    @Type(ListLongJsonType.class)
+    @Column(columnDefinition = "jsonb")
+    private List<String> correctAnswers;
+
+    @Column(name = "exam_id", nullable = false)
+    private Long examId;
 
     @Column(name = "created_by")
     @CreatedBy
@@ -57,8 +78,4 @@ public class Role {
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    @Type(ListStringJsonType.class)
-    @Column(columnDefinition = "jsonb")
-    private List<String> endPoint;
 }

@@ -1,9 +1,10 @@
 package com.example.demo.entity;
 
-import  java.time.LocalDateTime;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.List;
 
-import com.example.demo.extra.ListStringJsonType;
+import com.example.demo.extra.ListLongJsonType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -23,22 +24,29 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.stereotype.Component;
 
 @Entity
-@Table(name = "tbl_roles")
+@Table(name = "tbl_feedbacks")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Role {
+public class Feedback {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "role_name", nullable = false)
-    private String roleName;
+    @Column(name = "comment", nullable = false)
+    private String comment;
+
+    @Column(name = "vote_number")
+    private Integer voteNumber;
+
+    @Column(name = "exam_id", nullable = false)
+    private Long examId;
 
     @Column(name = "created_by")
     @CreatedBy
@@ -57,8 +65,4 @@ public class Role {
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @LastModifiedDate
     private LocalDateTime updatedAt;
-
-    @Type(ListStringJsonType.class)
-    @Column(columnDefinition = "jsonb")
-    private List<String> endPoint;
 }
