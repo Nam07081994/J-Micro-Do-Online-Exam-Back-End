@@ -120,8 +120,9 @@ public class AuthenticationService {
                     .getBody());
         }
         var roles = String.join(",", userRoles.get().getRoles());
+        var userName = userRoles.get().getUserName();
         return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.builder()
-                .body(Map.of("refresh-token", JwtTokenUtil.generateToken(email, roles)))
+                .body(Map.of("refresh-token", JwtTokenUtil.generateToken(email, roles, userName)))
                 .build()
                 .getBody());
     }
