@@ -39,17 +39,18 @@ public class JwtTokenUtil {
     }
 
 
-    public static String generateToken(String email, String role) {
+    public static String generateToken(String email, String role, String userName) {
         Map<String, Object> claims = new HashMap<>();
-        return createToken(claims, email, role);
+        return createToken(claims, email, role, userName);
     }
 
 
-    private static String createToken(Map<String, Object> claims, String email, String roles) {
+    private static String createToken(Map<String, Object> claims, String email, String roles, String userName) {
         return Jwts.builder()
                 .setClaims(claims)
                 .setId(email)
                 .setSubject(roles)
+                .setAudience(userName)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + expiration * 60 * 30))
                 .signWith(getSignKey(), SignatureAlgorithm.HS256).compact();

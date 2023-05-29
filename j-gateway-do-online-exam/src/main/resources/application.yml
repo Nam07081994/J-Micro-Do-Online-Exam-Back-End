@@ -16,7 +16,6 @@ eureka:
       default-zone: http://localhost:8761/eureka/
     enabled: true
 
-#config cloud gateway for router
 spring:
   application.name: gate-way
 #config connect to redis
@@ -26,10 +25,12 @@ spring:
       port: 50988
       connect-timeout: 2s
       timeout: 1s
+#config for circuit breaker
   cloud:
     circuitbreaker:
       resilience4j:
         enabled: true
+#config cloud gateway for router
     gateway:
       routes:
         - id: authorization-service
@@ -37,12 +38,65 @@ spring:
           predicates:
             - Path=/api/v1/auth/**
           filters:
-            - AuthenticationFilter
+#config authentication filter
+            - name: CircuitBreaker
+              args:
+                name: authen_services_circuit_breaker
+                fallbackUri: forward:/api/v1/circuit-breaker/fallback
+              metadata:
+                health-check-uri: /actuator/health
+                health-check-header: X-Custom-Health-Check-Header
+                circuit-breaker:
+                  name: authen_services_circuit_breaker
+                  fallback-uri: forward:/api/v1/circuit-breaker/fallback
+                  reset-timeout: 5000
+            - name: AuthenticationFilter
+#config rate limiter filter
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 2
+        - id: exam-service
+          uri: http://localhost:8500/
+          predicates:
+            - Path=/api/v1/exam/**
+          filters:
+            #config authentication filter
+            - name: CircuitBreaker
+              args:
+                name: authen_services_circuit_breaker
+                fallbackUri: forward:/api/v1/circuit-breaker/fallback
+              metadata:
+                health-check-uri: /actuator/health
+                health-check-header: X-Custom-Health-Check-Header
+                circuit-breaker:
+                  name: authen_services_circuit_breaker
+                  fallback-uri: forward:/api/v1/circuit-breaker/fallback
+                  reset-timeout: 5000
+            - name: AuthenticationFilter
+            #config rate limiter filter
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 2
         - id: test-service
           uri: http://localhost:8400/
           predicates:
             - Path=/test/**
           filters:
+            - name: CircuitBreaker
+              args:
+                name: test_services_circuit_breaker
+                fallbackUri: forward:/api/v1/circuit-breaker/fallback
+              metadata:
+                health-check-uri: /actuator/health
+                health-check-header: X-Custom-Health-Check-Header
+                circuit-breaker:
+                  name: test_services_circuit_breaker
+                  fallback-uri: forward:/api/v1/circuit-breaker/fallback
+                  reset-timeout: 5000
             - name: AuthenticationFilter
             - name: RequestRateLimiter
               args:
@@ -50,8 +104,17 @@ spring:
                 redis-rate-limiter.replenishRate: 2
                 redis-rate-limiter.burstCapacity: 2
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
 app:
   secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
-  openApiEndPoints: /api/v1/auth/register,/api/v1/auth/login,/eureka
+  openApiEndPoints: /api/v1/auth/register,/api/v1/auth/login,/eureka,/fallback
   url:
     getEndPoint: http://localhost:8100/api/v1/auth/getEndPoints

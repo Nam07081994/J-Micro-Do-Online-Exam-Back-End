@@ -6,9 +6,10 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 
 @SpringBootApplication
 @EnableDiscoveryClient
-public class JGatewayDoOnlineExamApplication {
+public class JExamServiceDoOnlineExamApplication {
 
 	public static void main(String[] args) {
-        SpringApplication.run(JGatewayDoOnlineExamApplication.class, args);
+		SpringApplication.run(JExamServiceDoOnlineExamApplication.class, args);
 	}
+
 }

@@ -2,7 +2,6 @@
 server:
   port: 8400
 
-#config for rabbit-mq
 spring:
   application:
     name: test-service

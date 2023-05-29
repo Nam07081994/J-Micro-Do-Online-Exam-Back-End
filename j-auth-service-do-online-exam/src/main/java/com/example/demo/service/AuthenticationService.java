@@ -67,10 +67,12 @@ public class AuthenticationService {
         Authentication authentication = authenticationManager
                 .authenticate(new UsernamePasswordAuthenticationToken(command.getEmail(), command.getPassword()));
         if (authentication.isAuthenticated()) {
-            var userRoles = userRepository.findByEmail(command.getEmail()).get().getRoles();
+            var user = userRepository.findByEmail(command.getEmail()).get();
+            var userName = user.getUserName();
+            var userRoles = user.getRoles();
             var roles = String.join(",", userRoles);
             return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.builder()
-                    .body(Map.of("access-token", JwtTokenUtil.generateToken(command.getEmail(), roles)))
+                    .body(Map.of("access-token", JwtTokenUtil.generateToken(command.getEmail(), roles, userName)))
                     .build()
                     .getBody());
         }
