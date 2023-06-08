@@ -1,17 +1,11 @@
 package com.example.demo.entity;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.List;
 
-import com.example.demo.Enum.ExamType;
-import com.example.demo.extra.ListLongJsonType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,7 +15,6 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -44,22 +37,14 @@ public class Exam {
     @Column(name = "exam_name", nullable = false)
     private String examName;
     
-    @Column(columnDefinition = "interval", nullable = false)
-    private Duration duration;
+    @Column(name = "exam_duration", nullable = false)
+    private Integer duration;
 
-    @Column(name = "download_number", nullable = false)
-    private Long downloadNumber;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "exam_type")
-    private ExamType examType;
+    @Column(columnDefinition = "bigint default 0", name = "download_number")
+    private long downloadNumber;
 
     @Column(name = "description")
     private String description;
-
-    @Type(ListLongJsonType.class)
-    @Column(columnDefinition = "jsonb")
-    private List<Long> questionId;
 
     @Column(name = "category_id", nullable = false)
     private Long categoryId;
