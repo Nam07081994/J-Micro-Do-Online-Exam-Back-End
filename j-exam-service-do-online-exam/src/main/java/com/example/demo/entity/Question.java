@@ -5,6 +5,7 @@ import java.util.List;
 
 import com.example.demo.Enum.QuestionType;
 import com.example.demo.extra.ListLongJsonType;
+import com.example.demo.extra.ListStringJsonType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -43,20 +44,20 @@ public class Question {
     @Column(name = "question_point", nullable = false)
     private Integer questionPoint;
 
-    @Column(name = "question", nullable = false)
+    @Column(name = "question", nullable = false, length = 2500)
     private String question;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "question_type", nullable = false)
     private QuestionType questionType;
 
-    @Type(ListLongJsonType.class)
+    @Type(ListStringJsonType.class)
     @Column(columnDefinition = "jsonb")
     private List<String> answers;
 
     @Type(ListLongJsonType.class)
     @Column(columnDefinition = "jsonb")
-    private List<String> correctAnswers;
+    private List<Long> correctAnswers;
 
     @Column(name = "exam_id", nullable = false)
     private Long examId;
