@@ -40,16 +40,16 @@ public class Role {
     @Column(name = "role_name", nullable = false)
     private String roleName;
 
-    @Column(name = "created_by", nullable = false)
+    @Column(name = "created_by")
     @CreatedBy
     private String createdBy;
 
-    @Column(name = "created_at", nullable = false)
+    @Column(name = "created_at")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
     @CreatedDate
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_by", nullable = false)
+    @Column(name = "updated_by")
     @LastModifiedBy
     private String updatedBy;
 

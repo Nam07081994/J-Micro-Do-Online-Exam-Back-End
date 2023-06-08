@@ -84,7 +84,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     String endPoint = request.getURI().getPath();
                     var email = jwtTokenUtil.getEmailFromToken(authHeader);
                     HttpHeaders headers = new HttpHeaders();
-                    headers.add(HttpHeaders.AUTHORIZATION, "Bearer " + authHeader);
+                    headers.add(HttpHeaders.AUTHORIZATION, Constant.BEARER_PREFIX + authHeader);
 
                     HttpEntity<Object> entity = new HttpEntity<>(headers);
                     UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(urlEndPoint)
@@ -97,7 +97,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                         List<String> stringList = new ObjectMapper().readValue(responseBody, List.class);
                         result = new HashSet<>(stringList);
                     }
-                    jwtTokenUtil.authorizeApiCallForUser(authHeader,endPoint, result);
+                    jwtTokenUtil.authorizeApiCallForUser(endPoint, result);
                 } catch (JwtException e) {
                     JSONObject obj = new JSONObject();
                     response.setStatusCode(HttpStatus.BAD_REQUEST);

@@ -32,7 +32,7 @@ public class JwtTokenUtil {
         .before(new Date());
   }
 
-  public void authorizeApiCallForUser(String token, String currentEndPoint, Set<String> endPoints)
+  public void authorizeApiCallForUser(String currentEndPoint, Set<String> endPoints)
       throws AccessDeniedException {
     if (!endPoints.contains(currentEndPoint)) {
       throw new AccessDeniedException("User don't have permission to access this api");
