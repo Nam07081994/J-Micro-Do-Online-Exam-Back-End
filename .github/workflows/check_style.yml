@@ -3,7 +3,7 @@ name: Checkstyle
 on:
   pull_request:
     branches:
-      - develop
+      - development
 
 jobs:
   java_check_job:
