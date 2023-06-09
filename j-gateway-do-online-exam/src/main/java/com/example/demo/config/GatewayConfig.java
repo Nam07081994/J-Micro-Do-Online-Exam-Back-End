@@ -1,9 +1,8 @@
 package com.example.demo.config;
 
-import java.time.Duration;
-
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import java.time.Duration;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -22,33 +21,36 @@ import reactor.core.publisher.Mono;
 @Configuration
 public class GatewayConfig {
 
-  @Bean
-  public RestTemplate restTemplate() {
-    CloseableHttpClient httpClient =
-        HttpClients.custom().setDefaultCookieStore(new BasicCookieStore()).build();
+	@Bean
+	public RestTemplate restTemplate() {
+		CloseableHttpClient httpClient =
+				HttpClients.custom().setDefaultCookieStore(new BasicCookieStore()).build();
 
-    ClientHttpRequestFactory requestFactory =new HttpComponentsClientHttpRequestFactory(httpClient);
+		ClientHttpRequestFactory requestFactory =
+				new HttpComponentsClientHttpRequestFactory(httpClient);
 
-    return new RestTemplate(requestFactory);
-  }
+		return new RestTemplate(requestFactory);
+	}
 
-    @Bean
-    public KeyResolver userKeyResolver() {
-        return exchange -> Mono.just("1");
-    }
+	@Bean
+	public KeyResolver userKeyResolver() {
+		return exchange -> Mono.just("1");
+	}
 
-    @Bean
-    public RedisRateLimiter redisRateLimiter()
-    {
-        return new RedisRateLimiter(1,2);
-    }
+	@Bean
+	public RedisRateLimiter redisRateLimiter() {
+		return new RedisRateLimiter(1, 2);
+	}
 
-    @Bean
-    public Customizer<ReactiveResilience4JCircuitBreakerFactory> defaultCustomizer()
-    {
-        return factory->factory.configureDefault(id ->new Resilience4JConfigBuilder(id)
-            .circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
-            .timeLimiterConfig(TimeLimiterConfig.custom()
-                .timeoutDuration(Duration.ofSeconds(2)).build()).build());
-    }
+	@Bean
+	public Customizer<ReactiveResilience4JCircuitBreakerFactory> defaultCustomizer() {
+		return factory ->
+				factory.configureDefault(
+						id ->
+								new Resilience4JConfigBuilder(id)
+										.circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
+										.timeLimiterConfig(
+												TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(2)).build())
+										.build());
+	}
 }

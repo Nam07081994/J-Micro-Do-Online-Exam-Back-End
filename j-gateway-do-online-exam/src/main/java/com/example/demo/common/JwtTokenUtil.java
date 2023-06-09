@@ -19,38 +19,36 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class JwtTokenUtil {
-  @Value("${app.secret}")
-  private String jwtSecret;
+	@Value("${app.secret}")
+	private String jwtSecret;
 
-  public void validateToken(final String token) throws JwtException {
-    Jwts.parserBuilder()
-        .setSigningKey(getSignKey())
-        .build()
-        .parseClaimsJws(token)
-        .getBody()
-        .getExpiration()
-        .before(new Date());
-  }
+	public void validateToken(final String token) throws JwtException {
+		Jwts.parserBuilder()
+				.setSigningKey(getSignKey())
+				.build()
+				.parseClaimsJws(token)
+				.getBody()
+				.getExpiration()
+				.before(new Date());
+	}
 
-  public void authorizeApiCallForUser(String currentEndPoint, Set<String> endPoints)
-      throws AccessDeniedException {
-    if (!endPoints.contains(currentEndPoint)) {
-      throw new AccessDeniedException("User don't have permission to access this api");
-    }
-  }
+	public void authorizeApiCallForUser(String currentEndPoint, Set<String> endPoints)
+			throws AccessDeniedException {
+		if (!endPoints.contains(currentEndPoint)) {
+			throw new AccessDeniedException("User don't have permission to access this api");
+		}
+	}
 
-  public String getEmailFromToken(String token) throws JsonProcessingException {
-    Jwt jwt = JwtHelper.decode(token);
-    String claims = jwt.getClaims();
-    ObjectMapper objectMapper = new ObjectMapper();
-    Map<String, Object> claimsMap =
-        objectMapper.readValue(claims, new TypeReference<Map<String, Object>>() {});
-    String email = claimsMap.get("jti").toString();
-    return email;
-  }
+	public String getEmailFromToken(String token) throws JsonProcessingException {
+		Jwt jwt = JwtHelper.decode(token);
+		String claims = jwt.getClaims();
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map<String, Object> claimsMap = objectMapper.readValue(claims, new TypeReference<>() {});
+		return claimsMap.get("jti").toString();
+	}
 
-  private Key getSignKey() {
-    byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
-    return Keys.hmacShaKeyFor(keyBytes);
-  }
+	private Key getSignKey() {
+		byte[] keyBytes = Decoders.BASE64.decode(jwtSecret);
+		return Keys.hmacShaKeyFor(keyBytes);
+	}
 }
