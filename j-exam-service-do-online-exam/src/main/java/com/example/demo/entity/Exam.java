@@ -1,7 +1,5 @@
 package com.example.demo.entity;
 
-import java.time.LocalDateTime;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -30,40 +29,40 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @AllArgsConstructor
 @Builder
 public class Exam {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(name = "exam_name", nullable = false)
-    private String examName;
-    
-    @Column(name = "exam_duration", nullable = false)
-    private Integer duration;
+	@Column(name = "exam_name", nullable = false)
+	private String examName;
 
-    @Column(columnDefinition = "bigint default 0", name = "download_number")
-    private long downloadNumber;
+	@Column(name = "exam_duration", nullable = false)
+	private Integer duration;
 
-    @Column(name = "description")
-    private String description;
+	@Column(columnDefinition = "bigint default 0", name = "download_number")
+	private long downloadNumber;
 
-    @Column(name = "category_id", nullable = false)
-    private Long categoryId;
+	@Column(name = "description")
+	private String description;
 
-    @Column(name = "created_by")
-    @CreatedBy
-    private String createdBy;
+	@Column(name = "category_id", nullable = false)
+	private Long categoryId;
 
-    @Column(name = "created_at")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
-    @CreatedDate
-    private LocalDateTime createdAt;
+	@Column(name = "created_by")
+	@CreatedBy
+	private String createdBy;
 
-    @Column(name = "updated_by")
-    @LastModifiedBy
-    private String updatedBy;
+	@Column(name = "created_at")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@CreatedDate
+	private LocalDateTime createdAt;
 
-    @Column(name = "updated_at")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+	@Column(name = "updated_by")
+	@LastModifiedBy
+	private String updatedBy;
+
+	@Column(name = "updated_at")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@LastModifiedDate
+	private LocalDateTime updatedAt;
 }

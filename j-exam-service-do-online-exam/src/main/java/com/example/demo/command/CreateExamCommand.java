@@ -1,8 +1,7 @@
 package com.example.demo.command;
 
-import java.util.List;
-
 import com.example.demo.dto.QuestionDto;
+import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateExamCommand {
-    private Long categoryId;
-    private String title;
-    private String description;
-    private Integer duration;
-    private List<QuestionDto> questions;
+	private Long categoryId;
+	private String title;
+	private String description;
+	private Integer duration;
+	private List<QuestionDto> questions;
 }

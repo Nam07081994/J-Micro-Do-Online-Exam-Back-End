@@ -14,16 +14,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/exam/exam")
 public class ExamController {
-    @Autowired
-    private ExamService examService;
+	@Autowired private ExamService examService;
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createExam(@RequestBody CreateExamCommand command){
-        return examService.createExam(command);
-    }
+	@PostMapping("/create")
+	public ResponseEntity<?> createExam(@RequestBody CreateExamCommand command) {
+		return examService.createExam(command);
+	}
 
-    @GetMapping("/downloadExam")
-    public ResponseEntity<?> downloadExam(@RequestParam Long examId) {
-        return examService.generateAndDownloadExamPDF(examId);
-    }
+	@GetMapping("/downloadExam")
+	public ResponseEntity<?> downloadExam(@RequestParam Long examId) {
+		return examService.generateAndDownloadExamPDF(examId);
+	}
 }

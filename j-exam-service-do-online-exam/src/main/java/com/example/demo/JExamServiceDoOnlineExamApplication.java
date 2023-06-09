@@ -11,5 +11,4 @@ public class JExamServiceDoOnlineExamApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(JExamServiceDoOnlineExamApplication.class, args);
 	}
-
 }
