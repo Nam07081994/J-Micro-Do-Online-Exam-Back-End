@@ -1,10 +1,7 @@
 package com.example.demo.common.jwt;
 
 import com.example.demo.constant.StringConstant;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -95,13 +92,23 @@ public class JwtTokenUtil {
 		return Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
 	}
 
-	public static Boolean isTokenExpired(String token) {
-		final Date expiration = (Date) getUserInfoFromToken(token, Claims::getExpiration);
-		return expiration.before(new Date());
-	}
+	//	public static Boolean isTokenExpired(String token) {
+	//		final Date expiration = (Date) getUserInfoFromToken(token, Claims::getExpiration);
+	//		return expiration.before(new Date());
+	//	}
 
 	public static Object getUserInfoFromToken(String token, Function<Claims, Object> claimsResolver) {
 		token = token.substring(7);
 		return extractClaim(token, claimsResolver);
+	}
+
+	public static boolean isTokenExpired(String token) {
+		try {
+			Claims claims = Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token).getBody();
+			Date expiration = claims.getExpiration();
+			return expiration.before(new Date());
+		} catch (ExpiredJwtException e) {
+			return true;
+		}
 	}
 }

@@ -6,6 +6,7 @@ import static com.example.demo.constant.TranslationCodeConstant.*;
 import com.example.demo.command.LoginCommand;
 import com.example.demo.command.RegisterCommand;
 import com.example.demo.common.jwt.JwtTokenUtil;
+import com.example.demo.common.response.CommonResponse;
 import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.config.jpa.JpaConfig;
 import com.example.demo.constant.StringConstant;
@@ -13,6 +14,7 @@ import com.example.demo.entity.User;
 import com.example.demo.repository.EndPointRepository;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Claims;
 import java.util.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -178,5 +180,45 @@ public class AuthenticationService {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(ERROR_GET_USER_INFOR));
 		}
+	}
+
+	public ResponseEntity<?> refreshToken(String token) throws JsonProcessingException {
+		var tokenExpired = JwtTokenUtil.isTokenExpired(token);
+		if (!tokenExpired) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body(
+							CommonResponse.builder()
+									.body(
+											Map.of(
+													"message", translationService.getTranslation(INVALID_TOKEN_INFORMATION)))
+									.build()
+									.getBody());
+		}
+		var email = (String) JwtTokenUtil.getUserInfoFromToken(token, Claims::getId);
+		var userRoles = userRepository.findByEmail(email);
+		if (!userRoles.isPresent()) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+					.body(
+							CommonResponse.builder()
+									.body(
+											Map.of(
+													"message",
+													translationService.getTranslation(INVALID_USER_DUPLICATE_INFORMATION)))
+									.build()
+									.getBody());
+		}
+		var roles ="";
+		for(Long roleID : userRoles.get().getRoles()){
+			roles = roles + roleRepository.findById(roleID).get().getRoleName() + ",";
+		}
+
+		var userName = userRoles.get().getUserName();
+		return ResponseEntity.status(HttpStatus.OK)
+				.body(
+						CommonResponse.builder()
+								.body(Map.of("refresh-token",
+										JwtTokenUtil.generateToken(email, roles.substring(0,roles.length() -1), userName)))
+								.build()
+								.getBody());
 	}
 }

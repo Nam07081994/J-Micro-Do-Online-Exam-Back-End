@@ -5,6 +5,7 @@ import com.example.demo.command.RegisterCommand;
 import com.example.demo.common.annotations.MultipleFileExtension;
 import com.example.demo.common.response.CommonResponse;
 import com.example.demo.service.AuthenticationService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,5 +51,11 @@ public class AuthenticationController {
 			@RequestHeader("Authorization") String token,
 			@RequestParam("file") @MultipleFileExtension MultipartFile file) {
 		return authenticationService.updateUserThumbnail(token, file);
+	}
+
+	@GetMapping("/refreshToken")
+	public ResponseEntity<?> refreshToken(@RequestBody String token)
+			throws JsonProcessingException {
+		return authenticationService.refreshToken(token);
 	}
 }
