@@ -2,7 +2,7 @@ package com.example.demo.constant;
 
 public class TranslationCodeConstant {
 
-	//
+	// user
 	public static final String USER_EMAIL_EXIST = "user-email-exist";
 
 	public static final String INVALID_LOGIN_INFORMATION = "login-failure";
