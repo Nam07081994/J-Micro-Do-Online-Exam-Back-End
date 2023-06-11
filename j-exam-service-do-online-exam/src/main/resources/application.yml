@@ -18,6 +18,7 @@ spring:
         format_sql: true
     database: postgresql
 
+
 eureka:
   instance:
     hostname: localhost
@@ -27,3 +28,10 @@ eureka:
     service-url:
       default-zone: http://localhost:8761/eureka/
     enabled: true
+
+app:
+  mail:
+    hostname: smtp.gmail.com
+    sslport: 465
+    email: nqa25041998@gmail.com
+    password: guitataewidxwcap

@@ -12,4 +12,8 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CommonResponse {
 	private Map<String, Object> body;
+
+	public static Map<String, Object> message(String message) {
+		return Map.of("message", message);
+	}
 }
