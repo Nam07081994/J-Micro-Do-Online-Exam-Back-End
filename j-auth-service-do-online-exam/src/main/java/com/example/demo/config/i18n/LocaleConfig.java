@@ -1,7 +1,6 @@
 package com.example.demo.config.i18n;
 
 import java.util.Locale;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.support.ResourceBundleMessageSource;
@@ -11,27 +10,27 @@ import org.springframework.web.servlet.i18n.AcceptHeaderLocaleResolver;
 
 @Component
 public class LocaleConfig {
-    @Value("${app.i18n.baseName}")
-    private String baseName;
+	@Value("${app.i18n.baseName}")
+	private String baseName;
 
-    @Value("${app.i18n.defaultLocale}")
-    private String defaultLocale;
+	@Value("${app.i18n.defaultLocale}")
+	private String defaultLocale;
 
-    @Bean(name = "messages")
-    public ResourceBundleMessageSource messageSource(){
-        ResourceBundleMessageSource rs = new ResourceBundleMessageSource();
-        rs.setBasename(baseName);
-        rs.setDefaultEncoding("UTF-8");
-        rs.setUseCodeAsDefaultMessage(true);
+	@Bean(name = "messages")
+	public ResourceBundleMessageSource messageSource() {
+		ResourceBundleMessageSource rs = new ResourceBundleMessageSource();
+		rs.setBasename(baseName);
+		rs.setDefaultEncoding("UTF-8");
+		rs.setUseCodeAsDefaultMessage(true);
 
-        return rs;
-    }
+		return rs;
+	}
 
-    @Bean
-    public LocaleResolver localeResolver(){
-        AcceptHeaderLocaleResolver acceptHeaderLocaleResolver = new AcceptHeaderLocaleResolver();
-        acceptHeaderLocaleResolver.setDefaultLocale(new Locale(defaultLocale));
+	@Bean
+	public LocaleResolver localeResolver() {
+		AcceptHeaderLocaleResolver acceptHeaderLocaleResolver = new AcceptHeaderLocaleResolver();
+		acceptHeaderLocaleResolver.setDefaultLocale(new Locale(defaultLocale));
 
-        return acceptHeaderLocaleResolver;
-    }
+		return acceptHeaderLocaleResolver;
+	}
 }

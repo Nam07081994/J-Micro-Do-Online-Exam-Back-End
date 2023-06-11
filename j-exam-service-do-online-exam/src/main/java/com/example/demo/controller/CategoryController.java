@@ -18,36 +18,35 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/category")
+@RequestMapping("/api/v1/exams/category")
 public class CategoryController {
-    @Autowired
-    private CategoryService categoryService;
+	@Autowired private CategoryService categoryService;
 
-    @GetMapping("/getCategories")
-    public ResponseEntity<?> getAllCategories(
-            @RequestParam(defaultValue = "0") Integer page,
-            @RequestParam(defaultValue = "10") Integer size){
-        Pageable paging = PageRequest.of(page, size);
-        return categoryService.getAllCategories(paging);
-    }
+	@GetMapping("/getCategories")
+	public ResponseEntity<?> getAllCategories(
+			@RequestParam(defaultValue = "0") Integer page,
+			@RequestParam(defaultValue = "10") Integer size) {
+		Pageable paging = PageRequest.of(page, size);
+		return categoryService.getAllCategories(paging);
+	}
 
-    @GetMapping("/detail")
-    public ResponseEntity<?> getCategoryDetail(@RequestBody Long categoryId){
-        return categoryService.getCategoryDetail(categoryId);
-    }
+	@GetMapping("/detail")
+	public ResponseEntity<?> getCategoryDetail(@RequestBody Long categoryId) {
+		return categoryService.getCategoryDetail(categoryId);
+	}
 
-    @PostMapping("/create")
-    public ResponseEntity<?> createCategory(@RequestBody CreateCategoryCommand command){
-        return categoryService.createCategory(command);
-    }
+	@PostMapping("/create")
+	public ResponseEntity<?> createCategory(@RequestBody CreateCategoryCommand command) {
+		return categoryService.createCategory(command);
+	}
 
-    @PutMapping("/update")
-    public ResponseEntity<?> udpateCategory(@RequestBody UpdateCategoryCommand command){
-        return categoryService.updateCategory(command);
-    }
+	@PutMapping("/update")
+	public ResponseEntity<?> udpateCategory(@RequestBody UpdateCategoryCommand command) {
+		return categoryService.updateCategory(command);
+	}
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteCategory(@RequestBody DeleteCategoryCommand command){
-        return categoryService.deleteCategory(command);
-    }
+	@DeleteMapping("/delete")
+	public ResponseEntity<?> deleteCategory(@RequestBody DeleteCategoryCommand command) {
+		return categoryService.deleteCategory(command);
+	}
 }

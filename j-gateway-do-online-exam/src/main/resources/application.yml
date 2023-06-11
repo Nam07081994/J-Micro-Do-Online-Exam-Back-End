@@ -34,11 +34,11 @@ spring:
     gateway:
       routes:
         - id: authorization-service
-          uri: http://localhost:8100/
+          uri: http://localhost:8764/
           predicates:
             - Path=/api/v1/auth/**
           filters:
-#config authentication filter
+          #config authentication filter
             - name: CircuitBreaker
               args:
                 name: authen_services_circuit_breaker
@@ -51,18 +51,19 @@ spring:
                   fallback-uri: forward:/api/v1/circuit-breaker/fallback
                   reset-timeout: 5000
             - name: AuthenticationFilter
-#config rate limiter filter
+          #config rate limiter filter
             - name: RequestRateLimiter
               args:
                 key-resolver: "#{@userKeyResolver}"
                 redis-rate-limiter.replenishRate: 2
                 redis-rate-limiter.burstCapacity: 2
+#-------------------------------------------------------------------------------
         - id: exam-service
-          uri: http://localhost:8500/
+          uri: http://localhost:8765/
           predicates:
-            - Path=/api/v1/exam/**
+            - Path=/api/v1/exams/**
           filters:
-            #config authentication filter
+          #config authentication filter
             - name: CircuitBreaker
               args:
                 name: authen_services_circuit_breaker
@@ -75,29 +76,82 @@ spring:
                   fallback-uri: forward:/api/v1/circuit-breaker/fallback
                   reset-timeout: 5000
             - name: AuthenticationFilter
-            #config rate limiter filter
+          #config rate limiter filter
             - name: RequestRateLimiter
               args:
                 key-resolver: "#{@userKeyResolver}"
                 redis-rate-limiter.replenishRate: 2
                 redis-rate-limiter.burstCapacity: 2
-        - id: test-service
-          uri: http://localhost:8400/
+#-------------------------------------------------------------------------------
+        - id: file-service
+          uri: http://localhost:8766/
           predicates:
-            - Path=/test/**
+            - Path=/api/v1/files/**
           filters:
+          #config authentication filter
             - name: CircuitBreaker
               args:
-                name: test_services_circuit_breaker
+                name: authen_services_circuit_breaker
                 fallbackUri: forward:/api/v1/circuit-breaker/fallback
               metadata:
                 health-check-uri: /actuator/health
                 health-check-header: X-Custom-Health-Check-Header
                 circuit-breaker:
-                  name: test_services_circuit_breaker
+                  name: authen_services_circuit_breaker
                   fallback-uri: forward:/api/v1/circuit-breaker/fallback
                   reset-timeout: 5000
             - name: AuthenticationFilter
+          #config rate limiter filter
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 2
+#-------------------------------------------------------------------------------
+        - id: article-service
+          uri: http://localhost:8767/
+          predicates:
+            - Path=/api/v1/articles/**
+          filters:
+          #config authentication filter
+            - name: CircuitBreaker
+              args:
+                name: authen_services_circuit_breaker
+                fallbackUri: forward:/api/v1/circuit-breaker/fallback
+              metadata:
+                health-check-uri: /actuator/health
+                health-check-header: X-Custom-Health-Check-Header
+                circuit-breaker:
+                  name: authen_services_circuit_breaker
+                  fallback-uri: forward:/api/v1/circuit-breaker/fallback
+                  reset-timeout: 5000
+            - name: AuthenticationFilter
+          #config rate limiter filter
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 2
+#-------------------------------------------------------------------------------
+        - id: notification-service
+          uri: http://localhost:8768/
+          predicates:
+            - Path=/api/v1/notify/**
+          filters:
+          #config authentication filter
+            - name: CircuitBreaker
+              args:
+                name: authen_services_circuit_breaker
+                fallbackUri: forward:/api/v1/circuit-breaker/fallback
+              metadata:
+                health-check-uri: /actuator/health
+                health-check-header: X-Custom-Health-Check-Header
+                circuit-breaker:
+                  name: authen_services_circuit_breaker
+                  fallback-uri: forward:/api/v1/circuit-breaker/fallback
+                  reset-timeout: 5000
+            - name: AuthenticationFilter
+          #config rate limiter filter
             - name: RequestRateLimiter
               args:
                 key-resolver: "#{@userKeyResolver}"
@@ -117,4 +171,4 @@ app:
   secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
   openApiEndPoints: /api/v1/auth/register,/api/v1/auth/login,/eureka,/fallback
   url:
-    getEndPoint: http://localhost:8100/api/v1/auth/getEndPoints
+    getEndPoint: http://localhost:8764/api/v1/auth/getEndPointsByRoles

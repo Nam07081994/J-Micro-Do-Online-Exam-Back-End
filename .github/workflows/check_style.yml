@@ -1,0 +1,23 @@
+name: Checkstyle
+
+on:
+  pull_request:
+    branches:
+      - development
+
+jobs:
+  java_check_job:
+    runs-on: ubuntu-latest
+    name: Java Check job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.4
+      - name: Setup Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: adopt
+          java-version: 17
+      - name: Build with Maven
+        run: mvn clean install
+      - name: Run spotlessCheck
+        run: mvn spotless:check
