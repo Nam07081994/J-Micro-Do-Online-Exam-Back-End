@@ -42,8 +42,7 @@ public class TranslationCodeConstant {
 
 	public static final String EDIT_ROLE_INFORMATION_SUCCESS = "edit-role-success";
 
-    public static final String INVALID_TOKEN_INFORMATION = "token-is-expired";
+	public static final String INVALID_TOKEN_INFORMATION = "token-is-expired";
 
-    public static final String INVALID_USER_DUPLICATE_INFORMATION = "user-is-exist";
-
+	public static final String INVALID_USER_DUPLICATE_INFORMATION = "user-is-exist";
 }

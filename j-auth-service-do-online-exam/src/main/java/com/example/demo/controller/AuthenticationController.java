@@ -1,7 +1,5 @@
 package com.example.demo.controller;
 
-import com.example.demo.command.LoginCommand;
-import com.example.demo.command.RefreshTokenCommand;
 import com.example.demo.command.RegisterCommand;
 import com.example.demo.common.annotations.MultipleFileExtension;
 import com.example.demo.common.response.CommonResponse;
@@ -9,7 +7,6 @@ import com.example.demo.service.AuthenticationService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import java.util.Set;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -55,8 +52,9 @@ public class AuthenticationController {
 		return authenticationService.updateUserThumbnail(token, file);
 	}
 
-    @GetMapping("/refreshToken")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenCommand token) throws JsonProcessingException {
-        return authenticationService.refreshToken(token.getToken());
-    }
+	@GetMapping("/refreshToken")
+	public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenCommand token)
+			throws JsonProcessingException {
+		return authenticationService.refreshToken(token.getToken());
+	}
 }
