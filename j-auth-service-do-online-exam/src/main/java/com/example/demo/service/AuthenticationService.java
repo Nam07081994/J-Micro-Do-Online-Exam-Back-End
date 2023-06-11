@@ -194,7 +194,7 @@ public class AuthenticationService {
 									.build()
 									.getBody());
 		}
-		var email = JwtTokenUtil.getEmailFromToken(token);
+		var email = (String) JwtTokenUtil.getUserInfoFromToken(token, Claims::getId);
 		var userRoles = userRepository.findByEmail(email);
 		if (!userRoles.isPresent()) {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
@@ -207,12 +207,17 @@ public class AuthenticationService {
 									.build()
 									.getBody());
 		}
-		var roles = String.join(",", userRoles.get().getRoles());
+		var roles ="";
+		for(Long roleID : userRoles.get().getRoles()){
+			roles = roles + roleRepository.findById(roleID).get().getRoleName() + ",";
+		}
+
 		var userName = userRoles.get().getUserName();
 		return ResponseEntity.status(HttpStatus.OK)
 				.body(
 						CommonResponse.builder()
-								.body(Map.of("refresh-token", JwtTokenUtil.generateToken(email, roles, userName)))
+								.body(Map.of("refresh-token",
+										JwtTokenUtil.generateToken(email, roles.substring(0,roles.length() -1), userName)))
 								.build()
 								.getBody());
 	}

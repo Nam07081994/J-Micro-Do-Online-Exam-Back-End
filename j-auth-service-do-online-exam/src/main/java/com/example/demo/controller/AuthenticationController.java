@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 
+import com.example.demo.command.LoginCommand;
 import com.example.demo.command.RegisterCommand;
 import com.example.demo.common.annotations.MultipleFileExtension;
 import com.example.demo.common.response.CommonResponse;
@@ -53,8 +54,8 @@ public class AuthenticationController {
 	}
 
 	@GetMapping("/refreshToken")
-	public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenCommand token)
+	public ResponseEntity<?> refreshToken(@RequestBody String token)
 			throws JsonProcessingException {
-		return authenticationService.refreshToken(token.getToken());
+		return authenticationService.refreshToken(token);
 	}
 }
