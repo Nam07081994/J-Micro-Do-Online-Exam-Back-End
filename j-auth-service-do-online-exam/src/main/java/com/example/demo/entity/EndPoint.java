@@ -1,8 +1,5 @@
 package com.example.demo.entity;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -11,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -31,28 +29,28 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @AllArgsConstructor
 @Builder
 public class EndPoint {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(name = "end_point", nullable = false)
-    private String endPoint;
+	@Column(name = "end_point", nullable = false)
+	private String endPoint;
 
-    @Column(name = "created_by")
-    @CreatedBy
-    private String createdBy;
+	@Column(name = "created_by")
+	@CreatedBy
+	private String createdBy;
 
-    @Column(name = "created_at")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
-    @CreatedDate
-    private LocalDateTime createdAt;
+	@Column(name = "created_at")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@CreatedDate
+	private LocalDateTime createdAt;
 
-    @Column(name = "updated_by")
-    @LastModifiedBy
-    private String updatedBy;
+	@Column(name = "updated_by")
+	@LastModifiedBy
+	private String updatedBy;
 
-    @Column(name = "updated_at")
-    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
-    @LastModifiedDate
-    private LocalDateTime updatedAt;
+	@Column(name = "updated_at")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+	@LastModifiedDate
+	private LocalDateTime updatedAt;
 }

@@ -1,41 +1,89 @@
 package com.example.demo.service;
 
-import java.util.Map;
+import static com.example.demo.constant.TranslationCodeConstant.*;
 
-import com.example.demo.command.SaveEndPointCommand;
-import com.example.demo.common.response.CommonResponse;
+import com.example.demo.common.response.GenerateResponseHelper;
+import com.example.demo.constant.StringConstant;
+import com.example.demo.dto.EndpointOptionDto;
 import com.example.demo.entity.EndPoint;
 import com.example.demo.repository.EndPointRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import static com.example.demo.constant.TranslationCodeConstant.SAVE_FAILURE_INFORMATION;
-import static com.example.demo.constant.TranslationCodeConstant.SAVE_SUCCESS_INFORMATION;
-
 @Service
+@AllArgsConstructor
 public class EndPointService {
-    @Autowired
-    EndPointRepository endPointRepository;
 
-    @Autowired
-    private TranslationService translationService;
+	private EndPointRepository endPointRepository;
 
-    public ResponseEntity<?> saveEndPoint(SaveEndPointCommand command){
-        var endPointExist = endPointRepository.findByEndPoint(command.getEndPoint());
-        if(endPointExist.isPresent()){
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder()
-                    .body(Map.of("message", translationService.getTranslation(SAVE_FAILURE_INFORMATION)))
-                    .build()
-                    .getBody());
-        }
-        EndPoint endPoint = new EndPoint();
-        endPoint.setEndPoint(command.getEndPoint());
-        endPointRepository.save(endPoint);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(CommonResponse.builder()
-                .body(Map.of("message", translationService.getTranslation(SAVE_SUCCESS_INFORMATION)))
-                .build()
-                .getBody());
-    }
+	private TranslationService translationService;
+
+	public ResponseEntity<?> endPointService() {
+		return null;
+	}
+
+	public ResponseEntity<?> saveEndPoint(String endPointPath) {
+		var endPointExist = endPointRepository.findByEndPoint(endPointPath);
+		if (endPointExist.isPresent()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(ENDPOINT_EXIST));
+		}
+		EndPoint endPoint = new EndPoint();
+		endPoint.setEndPoint(endPointPath);
+		endPointRepository.save(endPoint);
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(SAVE_ENDPOINT_INFORMATION_SUCCESS));
+	}
+
+	public ResponseEntity<?> getEndpointsOption() {
+		List<EndpointOptionDto> endpointOptionDtoList =
+				endPointRepository.findAll().stream().map(EndpointOptionDto::new).toList();
+
+		return GenerateResponseHelper.generateDataResponse(
+				HttpStatus.OK, Map.of(StringConstant.DATA_KEY, endpointOptionDtoList));
+	}
+
+	public ResponseEntity<?> editEndPoint(String endPointPath, Long id) {
+		Optional<EndPoint> endPointOptionalByID = endPointRepository.findById(id);
+		if (endPointOptionalByID.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST,
+					translationService.getTranslation(NOT_FOUND_ENDPOINT_INFORMATION));
+		}
+
+		Optional<EndPoint> endPointOptionalByName = endPointRepository.findByEndPoint(endPointPath);
+		if (!endPointOptionalByID.get().getEndPoint().equals(endPointPath)
+				&& endPointOptionalByName.isPresent()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(ENDPOINT_EXIST));
+		}
+		endPointOptionalByID.get().setEndPoint(endPointPath);
+		endPointRepository.save(endPointOptionalByID.get());
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(EDIT_ENDPOINT_INFORMATION_SUCCESS));
+	}
+
+	public ResponseEntity<?> deleteEndPoint(Long id) {
+		Optional<EndPoint> endPointOptionalByID = endPointRepository.findById(id);
+		if (endPointOptionalByID.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST,
+					translationService.getTranslation(NOT_FOUND_ENDPOINT_INFORMATION));
+		}
+		endPointRepository.delete(endPointOptionalByID.get());
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(DELETE_ENDPOINT_INFORMATION_SUCCESS));
+	}
+
+	public boolean checkEndpointExist(Long id) {
+		return endPointRepository.findById(id).isPresent();
+	}
 }

@@ -1,6 +1,6 @@
 #server port
 server:
-  port: 8100
+  port: 8764
 
 #config for rabbit-mq
 spring:
@@ -22,7 +22,7 @@ spring:
   #        prefetch: 10
   #config connect DB
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
+    url: jdbc:postgresql://localhost:5432/online-exam-db-1
     username: postgres
     password: 12345
     driver-class-name: org.postgresql.Driver
@@ -49,6 +49,7 @@ spring:
 eureka:
   instance:
     hostname: localhost
+    prefer-ip-address: true
   client:
     register-with-eureka: true
     fetch-registry: true
@@ -63,3 +64,5 @@ app:
   i18n:
     baseName: messages
     defaultLocale: en
+  default-user-thumbnail: http://localhost:8763/api/v1/files/images/users/default_user_thumbnail.jpg
+  file-service-endpoint: http://localhost:8103/api/v1/files/image/updateImage

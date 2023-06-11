@@ -1,11 +1,11 @@
 server:
-  port: 8500
+  port: 8765
 
 spring:
   application:
     name: exam-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/postgres
+    url: jdbc:postgresql://localhost:5432/online-exam-db-1
     username: postgres
     password: 12345
     driver-class-name: org.postgresql.Driver

@@ -1,11 +1,6 @@
 package com.example.demo.filter;
 
-import static com.example.demo.constants.Constant.DETAIL_KEY;
-import static com.example.demo.constants.Constant.HTTP_STATUS;
-import static com.example.demo.constants.Constant.MESSAGE_ACCESS_DENIED;
-import static com.example.demo.constants.Constant.MESSAGE_INVALID_TOKEN;
-import static com.example.demo.constants.Constant.MESSAGE_KEY;
-import static com.example.demo.constants.Constant.MESSAGE_NOT_LOGIN;
+import static com.example.demo.constants.Constant.*;
 
 import com.example.demo.common.JwtTokenUtil;
 import com.example.demo.constants.Constant;
@@ -60,15 +55,8 @@ public class AuthenticationFilter
 			if (validator.isSecured.test(exchange.getRequest())) {
 				if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
 					response.setStatusCode(HttpStatus.UNAUTHORIZED);
-					DataBuffer buffer =
-							response
-									.bufferFactory()
-									.wrap(
-											generateResponse(401, MESSAGE_NOT_LOGIN, Constant.EMPTY_STRING)
-													.toJSONString()
-													.getBytes(StandardCharsets.UTF_8));
-
-					return response.writeWith(Mono.just(buffer));
+					return response.writeWith(
+							Mono.just(generateResponse(response, MESSAGE_NOT_LOGIN, Constant.EMPTY_STRING)));
 				}
 
 				try {
@@ -81,13 +69,19 @@ public class AuthenticationFilter
 					jwtTokenUtil.validateToken(authHeader);
 					ServerHttpRequest request = exchange.getRequest();
 					String endPoint = request.getURI().getPath();
-					var email = jwtTokenUtil.getEmailFromToken(authHeader);
+					var roleArrStr = jwtTokenUtil.getInfoFromToken(authHeader, Constant.SUB_KEY);
+					if (roleArrStr == null || roleArrStr.length() == 0) {
+						response.setStatusCode(HttpStatus.UNAUTHORIZED);
+						return response.writeWith(
+								Mono.just(
+										generateResponse(response, MESSAGE_INVALID_TOKEN, MESSAGE_INVALID_ROLES)));
+					}
 					HttpHeaders headers = new HttpHeaders();
 					headers.add(HttpHeaders.AUTHORIZATION, Constant.BEARER_PREFIX + authHeader);
-
 					HttpEntity<Object> entity = new HttpEntity<>(headers);
 					UriComponentsBuilder builder =
-							UriComponentsBuilder.fromUriString(urlEndPoint).queryParam(Constant.EMAIL_KEY, email);
+							UriComponentsBuilder.fromUriString(urlEndPoint)
+									.queryParam(Constant.ROLES_KEY, roleArrStr);
 					String url = builder.toUriString();
 					ResponseEntity<String> endPoints =
 							restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
@@ -101,37 +95,21 @@ public class AuthenticationFilter
 					if (e instanceof ExpiredJwtException) {
 						return chain.filter(exchange.mutate().build());
 					}
-					response.setStatusCode(HttpStatus.BAD_REQUEST);
-					DataBuffer buffer =
-							response
-									.bufferFactory()
-									.wrap(
-											generateResponse(401, MESSAGE_INVALID_TOKEN, e.getMessage())
-													.toJSONString()
-													.getBytes(StandardCharsets.UTF_8));
-					return response.writeWith(Mono.just(buffer));
+					response.setStatusCode(HttpStatus.UNAUTHORIZED);
+					return response.writeWith(
+							Mono.just(generateResponse(response, MESSAGE_INVALID_TOKEN, e.getMessage())));
 				} catch (JsonProcessingException e) {
-					response.setStatusCode(HttpStatus.BAD_REQUEST);
-					DataBuffer buffer =
-							response
-									.bufferFactory()
-									.wrap(
-											generateResponse(401, MESSAGE_INVALID_TOKEN, e.getMessage())
-													.toJSONString()
-													.getBytes(StandardCharsets.UTF_8));
-					return response.writeWith(Mono.just(buffer));
+					response.setStatusCode(HttpStatus.UNAUTHORIZED);
+					return response.writeWith(
+							Mono.just(generateResponse(response, MESSAGE_INVALID_TOKEN, e.getMessage())));
 				} catch (AccessDeniedException e) {
 					response.setStatusCode(HttpStatus.FORBIDDEN);
-					DataBuffer buffer =
-							response
-									.bufferFactory()
-									.wrap(
-											generateResponse(403, MESSAGE_ACCESS_DENIED, e.getMessage())
-													.toJSONString()
-													.getBytes(StandardCharsets.UTF_8));
-					return response.writeWith(Mono.just(buffer));
+					return response.writeWith(
+							Mono.just(generateResponse(response, MESSAGE_ACCESS_DENIED, e.getMessage())));
 				} catch (Exception e) {
-					System.out.println(e.getMessage());
+					response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+					return response.writeWith(
+							Mono.just(generateResponse(response, MESSAGE_SERVER_NOT_READY, e.getMessage())));
 				}
 			}
 
@@ -141,12 +119,11 @@ public class AuthenticationFilter
 
 	public static class Config {}
 
-	private JSONObject generateResponse(int statusCode, String msg, String detailMsg) {
+	private DataBuffer generateResponse(ServerHttpResponse response, String msg, String detailMsg) {
 		JSONObject obj = new JSONObject();
-		obj.put(HTTP_STATUS, statusCode);
 		obj.put(MESSAGE_KEY, msg);
 		obj.put(DETAIL_KEY, detailMsg);
 
-		return obj;
+		return response.bufferFactory().wrap(obj.toJSONString().getBytes(StandardCharsets.UTF_8));
 	}
 }

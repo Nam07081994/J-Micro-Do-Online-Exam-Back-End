@@ -1,4 +1,2 @@
 package com.example.demo.entity;
-/**
- * This package contains entities
- */
+/** This package contains entities */
