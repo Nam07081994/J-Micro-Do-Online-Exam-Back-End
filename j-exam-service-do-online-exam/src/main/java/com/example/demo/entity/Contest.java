@@ -36,15 +36,27 @@ public class Contest {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	private String name;
+
+	private Long categoryId;
+
+	@Column(name = "description")
+	private String description;
+
+	private String duration;
+
+	private LocalDateTime startAt;
+
+	private LocalDateTime endAt;
+
+	private Long examId;
+
 	@Column(name = "examinee_number", nullable = false)
 	private Long examineeNumber;
 
 	@Type(ListLongJsonType.class)
 	@Column(columnDefinition = "jsonb")
 	private List<Long> examineeId;
-
-	@Column(name = "description")
-	private String description;
 
 	@Column(name = "created_by")
 	@CreatedBy
