@@ -12,16 +12,17 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 public class JwtTokenAuthenticationFilter extends OncePerRequestFilter {
 
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
-            throws ServletException, IOException, java.io.IOException {
-        String token = JwtTokenUtil.getTokenFromRequest(request);
+	@Override
+	protected void doFilterInternal(
+			HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+			throws ServletException, IOException, java.io.IOException {
+		String token = JwtTokenUtil.getTokenFromRequest(request);
 
-        if (token != null && JwtTokenUtil.validateToken(token)) {
-            Authentication auth = JwtTokenUtil.getAuthenticationFromToken(token);
-            SecurityContextHolder.getContext().setAuthentication(auth);
-        }
+		if (token != null && JwtTokenUtil.validateToken(token)) {
+			Authentication auth = JwtTokenUtil.getAuthenticationFromToken(token);
+			SecurityContextHolder.getContext().setAuthentication(auth);
+		}
 
-        chain.doFilter(request, response);
-    }
+		chain.doFilter(request, response);
+	}
 }

@@ -171,4 +171,4 @@ app:
   secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
   openApiEndPoints: /api/v1/auth/register,/api/v1/auth/login,/eureka,/fallback
   url:
-    getEndPoint: http://localhost:8764/api/v1/auth/getEndPoints
+    getEndPoint: http://localhost:8764/api/v1/auth/getEndPointsByRoles

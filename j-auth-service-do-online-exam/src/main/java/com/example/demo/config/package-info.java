@@ -1,4 +1,2 @@
 package com.example.demo.config;
-/**
- * This package contains configurations for the module
- */
+/** This package contains configurations for the module */

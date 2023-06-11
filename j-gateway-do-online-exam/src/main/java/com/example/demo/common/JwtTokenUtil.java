@@ -39,12 +39,13 @@ public class JwtTokenUtil {
 		}
 	}
 
-	public String getEmailFromToken(String token) throws JsonProcessingException {
+	public String getInfoFromToken(String token, String key) throws JsonProcessingException {
 		Jwt jwt = JwtHelper.decode(token);
 		String claims = jwt.getClaims();
 		ObjectMapper objectMapper = new ObjectMapper();
 		Map<String, Object> claimsMap = objectMapper.readValue(claims, new TypeReference<>() {});
-		return claimsMap.get("jti").toString();
+
+		return claimsMap.get(key).toString();
 	}
 
 	private Key getSignKey() {
