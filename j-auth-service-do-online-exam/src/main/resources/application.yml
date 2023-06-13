@@ -58,6 +58,8 @@ eureka:
     enabled: true
 
 app:
+  format:
+    date: yyyy-MM-dd HH:mm:ss.ffffff
   jwt:
     secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437
     expiration: 1000
@@ -66,3 +68,7 @@ app:
     defaultLocale: en
   default-user-thumbnail: http://localhost:8763/api/v1/files/images/users/default_user_thumbnail.jpg
   file-service-endpoint: http://localhost:8103/api/v1/files/image/updateImage
+  upload-rule:
+    user: 5
+    user-premium: 0
+

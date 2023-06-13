@@ -1,22 +1,9 @@
 package com.example.demo.entity;
 
-import com.example.demo.extra.ListLongJsonType;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import java.util.List;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.hibernate.annotations.Type;
+import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -24,38 +11,40 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 @Entity
-@Table(name = "tbl_contests")
+@Table(name = "tbl_accounts_exam")
 @EntityListeners(AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Contest {
+public class AccountExam {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(nullable = false)
-	private String name;
+	@Column(name = "contest_id", nullable = false)
+	private Long contestID;
 
-	@Column(nullable = false)
-	private String description;
+	@Column(name = "username", nullable = false)
+	private String username;
 
-	private String duration;
+	@Column(name = "password", nullable = false)
+	private String password;
 
+	@Column(name = "email", nullable = false)
+	private String email;
+
+	@Column(name = "role_name", nullable = false)
+	private String role;
+
+	@Column(name = "start_at")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime startAt;
 
+	@Column(name = "end_at")
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	private LocalDateTime endAt;
-
-	private Long examId;
-
-	@Column(name = "examinee_number", nullable = false)
-	private Long examineeNumber;
-
-	@Type(ListLongJsonType.class)
-	@Column(columnDefinition = "jsonb")
-	private List<Long> examineeId;
 
 	@Column(name = "created_by")
 	@CreatedBy

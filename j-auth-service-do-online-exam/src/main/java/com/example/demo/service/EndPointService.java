@@ -1,15 +1,19 @@
 package com.example.demo.service;
 
+import static com.example.demo.constant.StringConstant.ENDPOINT_KEY;
 import static com.example.demo.constant.TranslationCodeConstant.*;
 
+import com.example.demo.command.CommonSearchCommand;
+import com.example.demo.common.QueryCondition;
+import com.example.demo.common.QueryDateCondition;
 import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.constant.StringConstant;
 import com.example.demo.dto.EndpointOptionDto;
 import com.example.demo.entity.EndPoint;
+import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.repository.AbstractRepositoryImpl;
 import com.example.demo.repository.EndPointRepository;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,12 +23,41 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class EndPointService {
 
+	private AbstractRepositoryImpl<EndPoint> abstractRepository;
+
 	private EndPointRepository endPointRepository;
 
 	private TranslationService translationService;
 
-	public ResponseEntity<?> endPointService() {
-		return null;
+	public ResponseEntity<?> endPointService(CommonSearchCommand command, String name)
+			throws ExecuteSQLException {
+		Map<String, QueryCondition> searchParams = new HashMap<>();
+
+		if (!name.isEmpty()) {
+			searchParams.put(
+					ENDPOINT_KEY,
+					QueryCondition.builder().operation(StringConstant.LIKE_OPERATOR).value(name).build());
+		}
+
+		if (QueryDateCondition.generate(command, searchParams))
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
+
+		var result =
+				abstractRepository.search(
+						searchParams,
+						command.getOrder_by(),
+						command.getPage_size(),
+						command.getPage_index(),
+						EndPoint.class);
+
+		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
+	}
+
+	public List<String> getEndPointsByRole(List<Long> endPointIDs) {
+		return endPointIDs.stream()
+				.map(id -> endPointRepository.findById(id).get().getEndPoint())
+				.toList();
 	}
 
 	public ResponseEntity<?> saveEndPoint(String endPointPath) {

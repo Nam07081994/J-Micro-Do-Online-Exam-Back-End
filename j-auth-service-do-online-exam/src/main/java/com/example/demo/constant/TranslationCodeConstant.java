@@ -2,6 +2,8 @@ package com.example.demo.constant;
 
 public class TranslationCodeConstant {
 
+	public static final String FROM_DATE_TO_DATE_INVALID = "invalid-search-by-date";
+
 	// user
 	public static final String USER_EMAIL_EXIST = "user-email-exist";
 
@@ -44,5 +46,8 @@ public class TranslationCodeConstant {
 
 	public static final String INVALID_TOKEN_INFORMATION = "token-is-expired";
 
-	public static final String INVALID_USER_DUPLICATE_INFORMATION = "user-is-exist";
+	// sql
+	public static final String EXECUTE_SQL_ERROR = "sql-error";
+
+	public static final String NOT_FOUND_FILE_ERROR = "not-found-file";
 }

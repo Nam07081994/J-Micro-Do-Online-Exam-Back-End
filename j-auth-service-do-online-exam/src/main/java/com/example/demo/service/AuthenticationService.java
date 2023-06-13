@@ -1,22 +1,27 @@
 package com.example.demo.service;
 
-import static com.example.demo.constant.StringConstant.COMMA_STRING_CHARACTER;
+import static com.example.demo.constant.StringConstant.*;
 import static com.example.demo.constant.TranslationCodeConstant.*;
 
+import com.example.demo.command.CommonSearchCommand;
 import com.example.demo.command.LoginCommand;
 import com.example.demo.command.RegisterCommand;
+import com.example.demo.common.QueryCondition;
+import com.example.demo.common.QueryDateCondition;
 import com.example.demo.common.jwt.JwtTokenUtil;
-import com.example.demo.common.response.CommonResponse;
 import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.config.jpa.JpaConfig;
 import com.example.demo.constant.StringConstant;
+import com.example.demo.dto.UserDto;
 import com.example.demo.entity.User;
+import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.repository.AbstractRepositoryImpl;
 import com.example.demo.repository.EndPointRepository;
 import com.example.demo.repository.RoleRepository;
 import com.example.demo.repository.UserRepository;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.jsonwebtoken.Claims;
 import java.util.*;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -54,6 +59,50 @@ public class AuthenticationService {
 
 	@Autowired private AuthenticationManager authenticationManager;
 
+	@Autowired private AbstractRepositoryImpl<User> abstractRepository;
+
+	public ResponseEntity<?> getUsers(CommonSearchCommand command, String email, String username)
+			throws ExecuteSQLException {
+		Map<String, QueryCondition> searchParams = new HashMap<>();
+
+		if (!email.isEmpty()) {
+			searchParams.put(
+					EMAIL_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(email).build());
+		}
+
+		if (!username.isEmpty()) {
+			searchParams.put(
+					USERNAME_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(username).build());
+		}
+
+		if (QueryDateCondition.generate(command, searchParams))
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
+
+		var result =
+				abstractRepository.search(
+						searchParams,
+						command.getOrder_by(),
+						command.getPage_size(),
+						command.getPage_index(),
+						User.class);
+
+		List<User> users = (List<User>) result.get(StringConstant.DATA_KEY);
+		result.put(
+				StringConstant.DATA_KEY,
+				users.stream()
+						.map(
+								u -> {
+									String roles = getUserRolesString(u.getRoles());
+									List<String> rolesArr =
+											new ArrayList<>(Arrays.asList(roles.split(COMMA_STRING_CHARACTER)));
+									return new UserDto(u, rolesArr);
+								})
+						.collect(Collectors.toList()));
+
+		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
+	}
+
 	public ResponseEntity<?> resister(RegisterCommand command) {
 		var userExist = userRepository.findByEmail(command.getEmail());
 		var roleUser = roleRepository.findByRoleName(StringConstant.USER_ROLE_STRING);
@@ -67,7 +116,7 @@ public class AuthenticationService {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_ROLE_USER));
 		}
-
+		//TODO: add user limit upload umber
 		var user =
 				User.builder()
 						.userName(command.getUserName())
@@ -91,19 +140,14 @@ public class AuthenticationService {
 		Optional<User> userOpt = userRepository.findByEmail(command.getEmail());
 
 		if (authentication.isAuthenticated() && userOpt.isPresent()) {
-			var userName = userOpt.get().getUserName();
-			String roles = StringConstant.EMPTY_STRING;
-			for (Long roleID : userOpt.get().getRoles()) {
-				roles =
-						roles + roleRepository.findById(roleID).get().getRoleName() + COMMA_STRING_CHARACTER;
-			}
+			var userID = String.valueOf(userOpt.get().getId());
+			String roleResult = getUserRolesString(userOpt.get().getRoles());
 
 			return GenerateResponseHelper.generateDataResponse(
 					HttpStatus.OK,
 					Map.of(
 							StringConstant.ACCESS_TOKEN_KEY,
-							JwtTokenUtil.generateToken(
-									command.getEmail(), roles.substring(0, roles.length() - 1), userName)));
+							JwtTokenUtil.generateToken(command.getEmail(), roleResult, userID)));
 		}
 
 		return GenerateResponseHelper.generateMessageResponse(
@@ -173,52 +217,47 @@ public class AuthenticationService {
 			if (userOptional.isEmpty()) {
 				throw new Exception(ERROR_GET_USER_INFOR);
 			}
-			// TODO convert user -> user dto
+			String roles = getUserRolesString(userOptional.get().getRoles());
+			List<String> rolesArr = new ArrayList<>(Arrays.asList(roles.split(COMMA_STRING_CHARACTER)));
+
 			return GenerateResponseHelper.generateDataResponse(
-					HttpStatus.OK, Map.of(StringConstant.DATA_KEY, userOptional.get()));
+					HttpStatus.OK,
+					Map.of(StringConstant.DATA_KEY, new UserDto(userOptional.get(), rolesArr)));
 		} catch (Exception ex) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(ERROR_GET_USER_INFOR));
 		}
 	}
 
-	public ResponseEntity<?> refreshToken(String token) throws JsonProcessingException {
+	public ResponseEntity<?> refreshToken(String token) {
 		var tokenExpired = JwtTokenUtil.isTokenExpired(token);
 		if (!tokenExpired) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(
-							CommonResponse.builder()
-									.body(
-											Map.of(
-													"message", translationService.getTranslation(INVALID_TOKEN_INFORMATION)))
-									.build()
-									.getBody());
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(INVALID_TOKEN_INFORMATION));
 		}
 		var email = (String) JwtTokenUtil.getUserInfoFromToken(token, Claims::getId);
 		var userRoles = userRepository.findByEmail(email);
-		if (!userRoles.isPresent()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(
-							CommonResponse.builder()
-									.body(
-											Map.of(
-													"message",
-													translationService.getTranslation(INVALID_USER_DUPLICATE_INFORMATION)))
-									.build()
-									.getBody());
-		}
-		var roles ="";
-		for(Long roleID : userRoles.get().getRoles()){
-			roles = roles + roleRepository.findById(roleID).get().getRoleName() + ",";
+		if (userRoles.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_USER_INFORMATION));
 		}
 
-		var userName = userRoles.get().getUserName();
-		return ResponseEntity.status(HttpStatus.OK)
-				.body(
-						CommonResponse.builder()
-								.body(Map.of("refresh-token",
-										JwtTokenUtil.generateToken(email, roles.substring(0,roles.length() -1), userName)))
-								.build()
-								.getBody());
+		var userID = String.valueOf(userRoles.get().getId());
+		String roleResult = getUserRolesString(userRoles.get().getRoles());
+
+		return GenerateResponseHelper.generateDataResponse(
+				HttpStatus.OK,
+				Map.of(REFRESH_TOKEN_KEY, JwtTokenUtil.generateToken(email, roleResult, userID)));
+	}
+
+	private String getUserRolesString(List<Long> roleIDs) {
+		StringBuilder roles = new StringBuilder(StringConstant.EMPTY_STRING);
+		for (Long roleID : roleIDs) {
+			roles
+					.append(roleRepository.findById(roleID).get().getRoleName())
+					.append(COMMA_STRING_CHARACTER);
+		}
+
+		return roles.substring(0, roles.length() - 1);
 	}
 }
