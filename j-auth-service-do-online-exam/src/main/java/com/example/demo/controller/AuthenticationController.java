@@ -1,11 +1,12 @@
 package com.example.demo.controller;
 
+import com.example.demo.command.CommonSearchCommand;
 import com.example.demo.command.LoginCommand;
 import com.example.demo.command.RegisterCommand;
 import com.example.demo.common.annotations.MultipleFileExtension;
 import com.example.demo.common.response.CommonResponse;
+import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.service.AuthenticationService;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +37,22 @@ public class AuthenticationController {
 		return ResponseEntity.status(HttpStatus.OK).body(CommonResponse.builder().build().getBody());
 	}
 
+	@GetMapping("/users")
+	public ResponseEntity<?> getUsers(
+			@RequestParam(name = "username", required = false) String username,
+			@RequestParam(name = "email", required = false) String email,
+			@RequestParam(name = "from_date", required = false) String from_date,
+			@RequestParam(name = "to_date", required = false) String to_date,
+			@RequestParam(name = "page_size", defaultValue = "10") int page_size,
+			@RequestParam(name = "page_index", defaultValue = "-1") int page_index,
+			@RequestParam(name = "order_by", defaultValue = "-1") int order_by)
+			throws ExecuteSQLException {
+		return authenticationService.getUsers(
+				CommonSearchCommand.from(from_date, to_date, page_index, page_size, order_by),
+				email,
+				username);
+	}
+
 	@GetMapping("/getEndPointsByRoles")
 	public Set<String> getEndPoints(@RequestParam(name = "roles") String roles) {
 		return authenticationService.getEndPoint(roles);
@@ -54,8 +71,7 @@ public class AuthenticationController {
 	}
 
 	@GetMapping("/refreshToken")
-	public ResponseEntity<?> refreshToken(@RequestBody String token)
-			throws JsonProcessingException {
+	public ResponseEntity<?> refreshToken(@RequestBody String token) {
 		return authenticationService.refreshToken(token);
 	}
 }

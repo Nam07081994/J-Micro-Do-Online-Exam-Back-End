@@ -46,8 +46,11 @@ public class Result {
 	@Column(name = "exam_id", nullable = false)
 	private Long examId;
 
-	@Column(name = "examinee_id", nullable = false)
-	private Long examineeId;
+	@Column(name = "contest_id")
+	private Long contestId;
+
+	@Column(name = "email_examinee", nullable = false)
+	private Long emailExaminee;
 
 	@Column(name = "created_by")
 	@CreatedBy

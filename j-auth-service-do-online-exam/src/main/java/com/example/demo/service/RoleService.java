@@ -1,11 +1,20 @@
 package com.example.demo.service;
 
+import static com.example.demo.constant.StringConstant.ROLE_NAME_KEY;
+import static com.example.demo.constant.TranslationCodeConstant.FROM_DATE_TO_DATE_INVALID;
+
+import com.example.demo.command.CommonSearchCommand;
 import com.example.demo.command.RoleCommand;
+import com.example.demo.common.QueryCondition;
+import com.example.demo.common.QueryDateCondition;
 import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.constant.StringConstant;
 import com.example.demo.constant.TranslationCodeConstant;
 import com.example.demo.entity.Role;
+import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.repository.AbstractRepositoryImpl;
 import com.example.demo.repository.RoleRepository;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.AllArgsConstructor;
@@ -26,8 +35,31 @@ public class RoleService {
 
 	private TranslationService translationService;
 
-	public ResponseEntity<?> getRoles() {
-		return null;
+	private AbstractRepositoryImpl<Role> abstractRepository;
+
+	public ResponseEntity<?> getRoles(CommonSearchCommand command, String name)
+			throws ExecuteSQLException {
+		Map<String, QueryCondition> searchParams = new HashMap<>();
+
+		if (!name.isEmpty()) {
+			searchParams.put(
+					ROLE_NAME_KEY,
+					QueryCondition.builder().operation(StringConstant.LIKE_OPERATOR).value(name).build());
+		}
+
+		if (QueryDateCondition.generate(command, searchParams))
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
+
+		var result =
+				abstractRepository.search(
+						searchParams,
+						command.getOrder_by(),
+						command.getPage_size(),
+						command.getPage_index(),
+						Role.class);
+
+		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
 	}
 
 	@Transactional
@@ -105,5 +137,20 @@ public class RoleService {
 		// TODO convert role -> roleDto
 		return GenerateResponseHelper.generateDataResponse(
 				HttpStatus.OK, Map.of(StringConstant.DATA_KEY, roleOpt.get()));
+	}
+
+	public ResponseEntity<?> getEndpointsByRole(Long id) {
+		Optional<Role> roleOpt = roleRepository.findById(id);
+		if (roleOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST,
+					translationService.getTranslation(TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION));
+		}
+
+		return GenerateResponseHelper.generateDataResponse(
+				HttpStatus.OK,
+				Map.of(
+						StringConstant.DATA_KEY,
+						endPointService.getEndPointsByRole(roleOpt.get().getEndPoint())));
 	}
 }

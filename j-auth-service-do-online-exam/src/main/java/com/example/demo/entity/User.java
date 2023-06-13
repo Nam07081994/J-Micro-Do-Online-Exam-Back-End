@@ -48,6 +48,9 @@ public class User {
 	@Column(name = "password")
 	private String password;
 
+	@Column(name = "upload_number")
+	private int uploadNumber;
+
 	@Enumerated(EnumType.STRING)
 	@Column(name = "auth_type")
 	private AuthenticationType authType;
