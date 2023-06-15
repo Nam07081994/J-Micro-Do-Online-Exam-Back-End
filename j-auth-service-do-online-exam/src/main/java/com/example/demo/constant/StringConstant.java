@@ -52,6 +52,8 @@ public class StringConstant {
 
 	public static final String DOT_STRING_CHARACTER = ".";
 
+	public static final String DASH_STRING_CHARACTER = "-";
+
 	public static final String EMPTY_STRING = "";
 
 	// SQL string constants

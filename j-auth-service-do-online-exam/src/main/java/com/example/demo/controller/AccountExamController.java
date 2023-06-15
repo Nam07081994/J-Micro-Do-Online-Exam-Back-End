@@ -2,6 +2,7 @@ package com.example.demo.controller;
 
 import com.example.demo.command.CreateAccountsExamCommand;
 import com.example.demo.command.LoginAccountExamCommand;
+import com.example.demo.command.SendMailCommand;
 import com.example.demo.service.AccountExamService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -24,5 +25,10 @@ public class AccountExamController {
 	public ResponseEntity<?> registerAccountsExam(
 			@RequestBody @Valid CreateAccountsExamCommand command) {
 		return accountExamService.registerAccountsExam(command);
+	}
+
+	@PostMapping("/sendEmail")
+	public ResponseEntity<?> sendEmail(@RequestBody @Valid SendMailCommand command){
+		return accountExamService.sendEmails(command.getEmails(), command.getSubject(), command.getBody());
 	}
 }

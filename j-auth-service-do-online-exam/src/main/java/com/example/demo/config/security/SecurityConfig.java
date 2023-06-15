@@ -6,8 +6,13 @@ import com.example.demo.config.security.SecurityCustom.CustomAuthenticationEntry
 import com.example.demo.config.security.SecurityCustom.CustomUserDetailsService;
 import com.example.demo.config.security.SecurityCustom.Filter.JwtTokenAuthenticationFilter;
 import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.regex.Pattern;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -23,7 +28,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 
@@ -37,8 +44,8 @@ public class SecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
-		CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
-		requestHandler.setCsrfRequestAttributeName("_csrf");
+//		CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+//		requestHandler.setCsrfRequestAttributeName("_csrf");
 		httpSecurity
 				.exceptionHandling()
 				.authenticationEntryPoint(new CustomAuthenticationEntryPoint())
@@ -51,29 +58,40 @@ public class SecurityConfig {
 				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
 				.cors()
 				.configurationSource(
-						new CorsConfigurationSource() {
-							@Override
-							public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
-								CorsConfiguration config = new CorsConfiguration();
-								//
-								// config.setAllowedOrigins(Collections.singletonList("http://localhost:4200"));
-								config.setAllowedMethods(Collections.singletonList("*"));
-								config.setAllowCredentials(true);
-								config.setAllowedHeaders(Collections.singletonList("*"));
-								config.setMaxAge(3600L);
-								return config;
-							}
+						request -> {
+							CorsConfiguration config = new CorsConfiguration();
+							//
+							config.setAllowedOrigins(Collections.singletonList("*"));
+							config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"));
+							config.setAllowCredentials(true);
+							config.setAllowedHeaders(Collections.singletonList("*"));
+							config.setMaxAge(3600L);
+							return config;
 						})
 				.and()
-				.csrf()
-				.disable()
-				//				.csrf(
-				//						(csrf) ->
-				//								csrf.csrfTokenRequestHandler(requestHandler)
-				//										.ignoringRequestMatchers("/api/v1/auth/register", "/api/v1/auth/login")
-				//										.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+				.csrf().disable()
+//						(
+//						(csrf) -> csrf.disable()
+//								csrf.requireCsrfProtectionMatcher(new RequestMatcher() {
+//											private Pattern allowedMethods = Pattern.compile("^(GET|HEAD|TRACE|OPTIONS)$");
+//
+//											@Override
+//											public boolean matches(HttpServletRequest request) {
+//												// Ignoring CSRF token for specific request paths and methods
+//												return !allowedMethods.matcher(request.getMethod()).matches()
+//														&& !request.getRequestURI().equals("/api/v1/auth/register")
+//														&& !request.getRequestURI().equals("/api/v1/auth/login");
+//											}
+//										})
+//										.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+//				)
+//								.csrf(
+//										(csrf) ->
+//												csrf.csrfTokenRequestHandler(requestHandler)
+//														.ignoringRequestMatchers("/api/v1/auth/register", "/api/v1/auth/login")
+//														.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
 				.authorizeHttpRequests()
-				.requestMatchers("/api/v1/auth/register", "/api/v1/auth/login")
+				.requestMatchers("/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/accounts-exam/sendEmail")
 				.permitAll()
 				.anyRequest()
 				.authenticated()

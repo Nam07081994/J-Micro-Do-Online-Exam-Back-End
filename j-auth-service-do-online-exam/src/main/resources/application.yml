@@ -45,6 +45,18 @@ spring:
             scope:
               - email
               - profile
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: nqa25041998@gmail.com
+    password: guitataewidxwcap
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 #config for eureka client connect to eureka server
 eureka:
   instance:
@@ -71,4 +83,3 @@ app:
   upload-rule:
     user: 5
     user-premium: 0
-

@@ -50,4 +50,12 @@ public class TranslationCodeConstant {
 	public static final String EXECUTE_SQL_ERROR = "sql-error";
 
 	public static final String NOT_FOUND_FILE_ERROR = "not-found-file";
+
+	// account exam
+	public static final String CONTEST_TIME_ERROR = "login-time-error";
+
+	// email
+	public static final String SEND_EMAIL_SUCCESS = "send-email-success";
+
+	public static final String SEND_EMAIL_ERROR = "send-email-error";
 }
