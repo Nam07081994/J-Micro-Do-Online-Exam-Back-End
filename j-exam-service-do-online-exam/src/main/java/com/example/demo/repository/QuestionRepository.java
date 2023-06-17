@@ -10,4 +10,6 @@ import org.springframework.stereotype.Repository;
 public interface QuestionRepository extends JpaRepository<Question, Long> {
 	@Query(value = "SELECT q FROM Question q WHERE q.examId = ?1")
 	List<Question> findQuestionByExamId(Long examId);
+
+	void deleteQuestionByExamId(Long id);
 }

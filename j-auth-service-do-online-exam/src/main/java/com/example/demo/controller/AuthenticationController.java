@@ -70,8 +70,8 @@ public class AuthenticationController {
 		return authenticationService.updateUserThumbnail(token, file);
 	}
 
-	@GetMapping("/refreshToken")
-	public ResponseEntity<?> refreshToken(@RequestBody String token) {
+	@PostMapping("/refreshToken")
+	public ResponseEntity<?> refreshToken(@RequestHeader("Authorization") String token) {
 		return authenticationService.refreshToken(token);
 	}
 }

@@ -18,7 +18,6 @@ spring:
         format_sql: true
     database: postgresql
 
-
 eureka:
   instance:
     hostname: localhost
@@ -30,6 +29,34 @@ eureka:
     enabled: true
 
 app:
+  format:
+    date: yyyy-MM-dd HH:mm:ss.ffffff
+  url:
+    check-upload-exam-endpoint: http://localhost:8764/
+    upload-img-endpoint: http://localhost:8766/api/v1/files
+    update-img-endpoint: http://localhost:8766/api/v1/files/image/updateImage
+  i18n:
+    baseName: messages
+    defaultLocale: en
+  file:
+    pdf-settings:
+      content:
+        footer-text-vn: Bài thi được tải xuống từ do-online-exam
+        footer-text-en: The exam is downloaded from do-online-exam
+      position:
+        max-width-row: 590
+        spacing-each-question: 0
+        spacing-each-answer: 0
+      color:
+        title-color: 0,0,0
+        footer-color: 0,0,0
+      font:
+        font-style-normal: font/Arial Unicode MS.ttf
+        font-style-bold: font/ARIALBD.TTF
+        font-style-bold-italic: font/ARIALBI 1.TTF
+        fz-footer: 10
+        fz-question: 12
+        fz-page-number: 11
   mail:
     hostname: smtp.gmail.com
     sslport: 465
