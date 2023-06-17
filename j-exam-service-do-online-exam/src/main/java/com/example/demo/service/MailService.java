@@ -29,7 +29,8 @@ public class MailService {
 						props,
 						new jakarta.mail.Authenticator() {
 							protected PasswordAuthentication getPasswordAuthentication() {
-								return new PasswordAuthentication(mailProperties.getEmail(), mailProperties.getPassword());
+								return new PasswordAuthentication(
+										mailProperties.getEmail(), mailProperties.getPassword());
 							}
 						});
 

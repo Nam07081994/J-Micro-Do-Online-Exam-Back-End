@@ -1,12 +1,11 @@
 package com.example.demo.controller;
 
-import com.example.demo.command.CreateCategoryCommand;
-import com.example.demo.command.DeleteCategoryCommand;
-import com.example.demo.command.UpdateCategoryCommand;
+import com.example.demo.command.QuerySearchCommand;
+import com.example.demo.command.category.CreateCategoryCommand;
+import com.example.demo.command.category.UpdateCategoryCommand;
+import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.service.CategoryService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,21 +17,34 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/exams/category")
+@AllArgsConstructor
+@RequestMapping("/api/v1/exams/categories")
 public class CategoryController {
-	@Autowired private CategoryService categoryService;
 
-	@GetMapping("/getCategories")
+	private CategoryService categoryService;
+
+	@GetMapping("/get")
 	public ResponseEntity<?> getAllCategories(
-			@RequestParam(defaultValue = "0") Integer page,
-			@RequestParam(defaultValue = "10") Integer size) {
-		Pageable paging = PageRequest.of(page, size);
-		return categoryService.getAllCategories(paging);
+			@RequestParam(name = "name", required = false) String name,
+			@RequestParam(name = "from_date", required = false) String from_date,
+			@RequestParam(name = "to_date", required = false) String to_date,
+			@RequestParam(name = "page_size", defaultValue = "10") int page_size,
+			@RequestParam(name = "page_index", defaultValue = "-1") int page_index,
+			@RequestParam(name = "order_by", defaultValue = "-1") int order_by)
+			throws ExecuteSQLException {
+
+		return categoryService.getAllCategories(
+				QuerySearchCommand.from(from_date, to_date, page_index, page_size, order_by), name);
+	}
+
+	@GetMapping("/options")
+	public ResponseEntity<?> getCategoriesOption() {
+		return categoryService.getAllCategoriesOption();
 	}
 
 	@GetMapping("/detail")
-	public ResponseEntity<?> getCategoryDetail(@RequestBody Long categoryId) {
-		return categoryService.getCategoryDetail(categoryId);
+	public ResponseEntity<?> getCategoryDetail(@RequestParam("id") Long id) {
+		return categoryService.getCategoryDetail(id);
 	}
 
 	@PostMapping("/create")
@@ -46,7 +58,7 @@ public class CategoryController {
 	}
 
 	@DeleteMapping("/delete")
-	public ResponseEntity<?> deleteCategory(@RequestBody DeleteCategoryCommand command) {
-		return categoryService.deleteCategory(command);
+	public ResponseEntity<?> deleteCategory(@RequestParam("id") Long id) {
+		return categoryService.deleteCategory(id);
 	}
 }

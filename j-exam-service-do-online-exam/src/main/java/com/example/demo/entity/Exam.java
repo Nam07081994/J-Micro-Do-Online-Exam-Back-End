@@ -48,9 +48,17 @@ public class Exam {
 	@Column(name = "category_id", nullable = false)
 	private Long categoryId;
 
+	@Column(name = "owner_id")
+	private Long ownerId;
+
+	@Column(name = "is_private")
+	private Boolean isPrivate;
+
 	@Column(name = "created_by")
 	@CreatedBy
 	private String createdBy;
+
+	private String thumbnail;
 
 	@Column(name = "created_at")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")

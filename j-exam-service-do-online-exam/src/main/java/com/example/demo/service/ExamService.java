@@ -1,63 +1,236 @@
 package com.example.demo.service;
 
-import static com.example.demo.constant.Constant.ARIAL_BOLD_ITALIC_PATH;
-import static com.example.demo.constant.Constant.ARIAL_BOLD_PATH;
-import static com.example.demo.constant.Constant.ARIAL_UNICODE_MS_PATH;
-import static com.example.demo.constant.Constant.COMMENT_CONTENT_EN;
-import static com.example.demo.constant.Constant.COMMENT_CONTENT_VI;
-import static com.example.demo.constant.Constant.FOOTER_PDF_EN;
-import static com.example.demo.constant.Constant.FOOTER_PDF_VI;
-import static com.example.demo.constant.Constant.TOTAL_POINT_CONTENT_EN;
-import static com.example.demo.constant.Constant.TOTAL_POINT_CONTENT_VI;
+import static com.example.demo.constant.Constant.*;
+import static com.example.demo.constant.SQLConstants.*;
+import static com.example.demo.constant.TranslationCodeConstants.*;
 
 import com.example.demo.Enum.QuestionType;
-import com.example.demo.command.CreateExamCommand;
-import com.example.demo.common.response.CommonResponse;
+import com.example.demo.command.QuerySearchCommand;
+import com.example.demo.command.exam.CreateExamCommand;
+import com.example.demo.command.exam.EditExamCommand;
+import com.example.demo.common.jwt.JwtTokenUtil;
+import com.example.demo.common.query.QueryCondition;
+import com.example.demo.common.query.QueryDateCondition;
+import com.example.demo.common.response.GenerateResponseHelper;
+import com.example.demo.dto.exam.ExamCardDto;
+import com.example.demo.dto.exam.ExamDto;
+import com.example.demo.dto.exam.ExamOptionDto;
+import com.example.demo.dto.question.QuestionExamDto;
+import com.example.demo.entity.Contest;
 import com.example.demo.entity.Exam;
 import com.example.demo.entity.Question;
+import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.repository.CategoryRepository;
+import com.example.demo.repository.ContestRepository;
 import com.example.demo.repository.ExamRepository;
 import com.example.demo.repository.QuestionRepository;
-import java.awt.Color;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.util.ArrayList;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
-import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @EnableTransactionManagement
 public class ExamService {
+
+	@Value("${app.url.check-upload-exam-endpoint}")
+	private String CHECK_USER_UPLOAD_URI;
+
+	@Value("${app.url.upload-img-endpoint}")
+	private String UPLOAD_IMAGE_URI;
+
+	@Value("${app.url.update-img-endpoint}")
+	private String UPDATE_IMAGE_URI;
+
+	@Autowired private RestTemplate restTemplate;
+
 	@Autowired private ExamRepository examRepository;
 
 	@Autowired private QuestionRepository questionRepository;
 
+	@Autowired private TranslationService translationService;
+
+	@Autowired private CategoryRepository categoryRepository;
+
+	@Autowired private ExportFileService exportFileService;
+
+	@Autowired private ContestRepository contestRepository;
+
+	public ResponseEntity<?> getAllExam(
+			QuerySearchCommand command, String token, String name, String category_ids, int duration)
+			throws JsonProcessingException, ExecuteSQLException {
+		// TODO: handle logic get exam for normal_user or premium_user
+		Map<String, QueryCondition> orParams = new HashMap<>();
+		Map<String, QueryCondition> searchParams = new HashMap<>();
+
+		if (token.isEmpty()) {
+			searchParams.put(
+					EXAM_IS_PRIVATE_SEARCH_KEY,
+					QueryCondition.builder().value(EXAM_PUBLIC_FLAG).operation(EQUAL_OPERATOR).build());
+		} else {
+			Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+			String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
+
+			if (userRoles.contains(USER_EXAM_ROLE)) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
+			}
+			if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
+				orParams.put(
+						EXAM_OWNER_ID_SEARCH_KEY,
+						QueryCondition.builder().value(userID).operation(EQUAL_OPERATOR).build());
+			}
+		}
+
+		if (!name.isEmpty()) {
+			searchParams.put(
+					EXAM_NAME_SEARCH_KEY,
+					QueryCondition.builder().value(name).operation(LIKE_OPERATOR).build());
+		}
+
+		if (!category_ids.isEmpty()) {
+			String[] arrCategoryIDs = category_ids.split(",");
+			var categoryIDs = Arrays.asList(arrCategoryIDs);
+			searchParams.put(
+					EXAM_CATEGORY_SEARCH_KEY,
+					QueryCondition.builder().value(categoryIDs).operation(IN_OPERATOR).build());
+		}
+
+		if (duration > 0) {
+			searchParams.put(
+					EXAM_DURATION_SEARCH_KEY,
+					QueryCondition.builder().value(duration).operation(EQUAL_OPERATOR).build());
+		}
+
+		if (QueryDateCondition.generate(command, searchParams))
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
+
+		var result =
+				examRepository.search(
+						searchParams,
+						orParams,
+						command.getOrder_by(),
+						command.getPage_size(),
+						command.getPage_index(),
+						Exam.class);
+
+		List<Exam> exams = (List<Exam>) result.get(DATA_KEY);
+
+		var examCardDto =
+				exams.stream()
+						.map(
+								e -> {
+									var categoryName =
+											categoryRepository.findById(e.getCategoryId()).get().getCategoryName();
+									return new ExamCardDto(e, categoryName);
+								})
+						.toList();
+
+		result.put(DATA_KEY, examCardDto);
+
+		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
+	}
+
+	public ResponseEntity<?> getExamsOption(String token) throws JsonProcessingException {
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
+
+		if (!userRoles.contains(USER_EXAM_ROLE)
+				&& (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE))) {
+			var examsUser = new ArrayList<>();
+			for (Exam exam : examRepository.findAllByOwnerId(userID)) {
+				ExamOptionDto examOptionDto = new ExamOptionDto(exam);
+				examsUser.add(examOptionDto);
+			}
+
+			return GenerateResponseHelper.generateDataResponse(
+					HttpStatus.OK, Map.of(DATA_KEY, examsUser));
+		}
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_HAVE_EXAM_OPTIONS));
+	}
+
 	@Transactional
-	public ResponseEntity<?> createExam(CreateExamCommand command) {
+	public ResponseEntity<?> createExam(CreateExamCommand command, String token) throws IOException {
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
 		var exam =
 				Exam.builder()
 						.categoryId(command.getCategoryId())
 						.examName(command.getTitle())
+						.ownerId(userID)
 						.duration(command.getDuration())
 						.description(command.getDescription())
 						.build();
 
+		if (userRoles.contains(USER_EXAM_ROLE)) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
+		}
+
+		if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
+			exam.setIsPrivate(EXAM_PRIVATE_FLAG);
+			try {
+				HttpHeaders headers = new HttpHeaders();
+				headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token);
+				HttpEntity<Object> entity = new HttpEntity<>(headers);
+				UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(CHECK_USER_UPLOAD_URI);
+				String url = builder.toUriString();
+				ResponseEntity<String> resp =
+						restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
+				if (!resp.getStatusCode().is2xxSuccessful()) {
+					return GenerateResponseHelper.generateMessageResponse(
+							HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_ALLOW_CREATE_EXAM));
+				}
+
+			} catch (Exception ex) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST, translationService.getTranslation(ERROR_CREATE_EXAM));
+			}
+		}
+		// save thumbnail
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+		body.add(DOMAIN_KEY, EXAM_DOMAIN_NAME);
+		body.add(FILE_TYPE_KEY, IMAGE_FOLDER_TYPE);
+		ByteArrayResource contentsAsResource =
+				new ByteArrayResource(command.getFile().getBytes()) {
+					@Override
+					public String getFilename() {
+						return command.getFile().getOriginalFilename();
+					}
+				};
+		body.add(FILE_KEY, contentsAsResource);
+		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+		ResponseEntity<String> response =
+				restTemplate.exchange(UPLOAD_IMAGE_URI, HttpMethod.POST, requestEntity, String.class);
+
+		exam.setThumbnail(response.getBody());
 		var savedExam = examRepository.saveAndFlush(exam);
 		var savedExamId = savedExam.getId();
 
@@ -77,90 +250,71 @@ public class ExamService {
 						.collect(Collectors.toList());
 
 		if (questions.isEmpty()) {
-			// TODO: need add i18n message
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(
-							CommonResponse.builder()
-									.body(Map.of("message", "Cannot save question"))
-									.build()
-									.getBody());
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(LIST_QUESTION_INVALID));
 		}
 		questionRepository.saveAll(questions);
 
-		// TODO: need add i18n message
-		return ResponseEntity.status(HttpStatus.OK)
-				.body(
-						CommonResponse.builder()
-								.body(Map.of("message", "Create Exam Success"))
-								.build()
-								.getBody());
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(SAVE_EXAM_INFORMATION_SUCCESS));
 	}
 
-	private boolean containsVietnameseChar(String text) {
-		for (int i = 0; i < text.length(); i++) {
-			char c = text.charAt(i);
-			if (Character.UnicodeBlock.of(c) == Character.UnicodeBlock.LATIN_EXTENDED_ADDITIONAL) {
-				return true;
-			}
+	public ResponseEntity<?> getExamByName(String token, String name, Boolean flag)
+			throws JsonProcessingException {
+		Optional<Exam> examOpt = examRepository.findExamByExamName(name);
+		if (examOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
 		}
-		return false;
-	}
 
-	private List<String> splitTextIntoLines(String text, PDFont font, int fontSize, int maxWidth)
-			throws IOException {
-		List<String> lines = new ArrayList<>();
-		int textWidth = (int) (font.getStringWidth(text) / 1000 * fontSize);
-
-		if (textWidth <= maxWidth) {
-			// Chuỗi không vượt quá giới hạn chiều rộng
-			lines.add(text);
-		} else {
-			// Phân chia chuỗi thành các dòng
-			StringBuilder currentLine = new StringBuilder();
-			String[] words = text.split("\\s+"); // Tách chuỗi thành từng từ
-
-			for (String word : words) {
-				String tempLine = currentLine + " " + word;
-				int tempWidth = (int) (font.getStringWidth(tempLine) / 1000 * fontSize);
-
-				if (tempWidth <= maxWidth) {
-					// Thêm từ vào dòng hiện tại nếu chiều rộng không vượt quá giới hạn
-					currentLine.append(" ").append(word);
-				} else {
-					// Thêm dòng hiện tại vào danh sách dòng và bắt đầu một dòng mới
-					lines.add(currentLine.toString().trim());
-					currentLine = new StringBuilder(word);
-				}
-			}
-
-			// Thêm dòng cuối cùng vào danh sách dòng
-			lines.add(currentLine.toString().trim());
+		Long ownerID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		if ((ownerID.compareTo(examOpt.get().getOwnerId()) != 0)
+				&& examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST,
+					translationService.getTranslation(NOT_ALLOW_ACCESS_EXAM_INFORMATION));
 		}
-		return lines;
+
+		var categoryName =
+				categoryRepository.findById(examOpt.get().getCategoryId()).get().getCategoryName();
+
+		if (flag) {
+			var examCardDto = new ExamCardDto(examOpt.get(), categoryName);
+
+			return GenerateResponseHelper.generateDataResponse(
+					HttpStatus.OK, Map.of(DATA_KEY, examCardDto));
+		}
+
+		var questionExamDto =
+				questionRepository.findQuestionByExamId(examOpt.get().getId()).stream()
+						.map(QuestionExamDto::new)
+						.toList();
+
+		var exam = new ExamDto(examOpt.get(), categoryName, questionExamDto);
+
+		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, exam));
 	}
 
-	public ResponseEntity<?> generateAndDownloadExamPDF(Long examId) {
+	public ResponseEntity<?> generateAndDownloadExamPDF(String token, Long examId)
+			throws JsonProcessingException {
 		var pageNo = 0;
-		var questions = questionRepository.findQuestionByExamId(examId);
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
 		var exam = examRepository.findById(examId);
-		if (!exam.isPresent()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(
-							CommonResponse.builder()
-									.body(Map.of("message", "Exam is not exist!!"))
-									.build()
-									.getBody());
-		} else if (questions.isEmpty()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(
-							CommonResponse.builder()
-									.body(Map.of("message", "Question is not exist!!"))
-									.build()
-									.getBody());
+		if (exam.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
 		}
+		if (exam.get().getIsPrivate() == EXAM_PRIVATE_FLAG
+				&& (exam.get().getOwnerId().compareTo(userID) != 0)) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST,
+					translationService.getTranslation(NOT_ALLOW_ACCESS_EXAM_INFORMATION));
+		}
+
+		var questions = questionRepository.findQuestionByExamId(examId);
 
 		try {
-			var language = containsVietnameseChar(exam.get().getExamName());
+			var language = exportFileService.containsVietnameseChar(exam.get().getExamName());
 			PDDocument document = new PDDocument();
 			PDPage page = new PDPage(PDRectangle.A4);
 			document.addPage(page);
@@ -180,9 +334,9 @@ public class ExamService {
 			float borderHeight = pageSize.getHeight() - 2 * margin;
 			PDPageContentStream contentStream = new PDPageContentStream(document, page);
 			// PageNo
-			drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
+			exportFileService.drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
 			// FooterContent
-			drawFooterContent(
+			exportFileService.drawFooterContent(
 					contentStream,
 					FOOTER_PDF_VI,
 					FOOTER_PDF_EN,
@@ -194,7 +348,7 @@ public class ExamService {
 					200,
 					13);
 			// Title
-			drawContent(
+			exportFileService.drawContent(
 					contentStream, exam.get().getExamName(), customFontBold, Color.RED, 20, 25, startY);
 			// ExamId, Name
 			String examIdPdf =
@@ -202,7 +356,7 @@ public class ExamService {
 							? "Mã bài thi: EX" + exam.get().getId() + LocalDate.now().getYear()
 							: "Exam ID: EX" + exam.get().getId();
 			String namePdf = language ? "Họ và tên: " + ".".repeat(50) : "Name: " + ".".repeat(50);
-			drawContentInline(
+			exportFileService.drawContentInline(
 					contentStream,
 					examIdPdf,
 					namePdf,
@@ -217,11 +371,12 @@ public class ExamService {
 					language
 							? "Thời gian thi: " + exam.get().getDuration() + " phút"
 							: "Duration: " + exam.get().getDuration() + " minutes";
-			drawContent(contentStream, durationPdf, customFontManual, Color.BLACK, 11, 25, startY - 15);
+			exportFileService.drawContent(
+					contentStream, durationPdf, customFontManual, Color.BLACK, 11, 25, startY - 15);
 			// Set the positions and dimensions
 			String pointHeader = language ? TOTAL_POINT_CONTENT_VI : TOTAL_POINT_CONTENT_EN;
 			String commentHeader = language ? COMMENT_CONTENT_VI : COMMENT_CONTENT_EN;
-			drawTableOfPointAndComment(
+			exportFileService.drawTableOfPointAndComment(
 					contentStream,
 					pointHeader,
 					commentHeader,
@@ -258,8 +413,8 @@ public class ExamService {
 					document.addPage(page);
 					contentStream.close();
 					contentStream = new PDPageContentStream(document, page);
-					drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
-					drawFooterContent(
+					exportFileService.drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
+					exportFileService.drawFooterContent(
 							contentStream,
 							FOOTER_PDF_VI,
 							FOOTER_PDF_EN,
@@ -282,7 +437,8 @@ public class ExamService {
 				}
 
 				// Tách questionText thành các dòng
-				List<String> lines = splitTextIntoLines(questionText, customFontBold, 13, 590);
+				List<String> lines =
+						exportFileService.splitTextIntoLines(questionText, customFontBold, 13, 590);
 
 				for (String line : lines) {
 					if (remainingLines <= 0) {
@@ -291,8 +447,8 @@ public class ExamService {
 						document.addPage(page);
 						contentStream.close();
 						contentStream = new PDPageContentStream(document, page);
-						drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
-						drawFooterContent(
+						exportFileService.drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
+						exportFileService.drawFooterContent(
 								contentStream,
 								FOOTER_PDF_VI,
 								FOOTER_PDF_EN,
@@ -330,8 +486,9 @@ public class ExamService {
 							document.addPage(page);
 							contentStream.close();
 							contentStream = new PDPageContentStream(document, page);
-							drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
-							drawFooterContent(
+							exportFileService.drawPageNumber(
+									contentStream, ++pageNo, customFontManual, 11, 25, 13);
+							exportFileService.drawFooterContent(
 									contentStream,
 									FOOTER_PDF_VI,
 									FOOTER_PDF_EN,
@@ -353,7 +510,8 @@ public class ExamService {
 							remainingLines--;
 						}
 
-						List<String> answerLines = splitTextIntoLines(answerText, customFontManual, 12, 545);
+						List<String> answerLines =
+								exportFileService.splitTextIntoLines(answerText, customFontManual, 12, 545);
 
 						for (String line : answerLines) {
 							if (remainingLines <= 0) {
@@ -362,8 +520,9 @@ public class ExamService {
 								document.addPage(page);
 								contentStream.close();
 								contentStream = new PDPageContentStream(document, page);
-								drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
-								drawFooterContent(
+								exportFileService.drawPageNumber(
+										contentStream, ++pageNo, customFontManual, 11, 25, 13);
+								exportFileService.drawFooterContent(
 										contentStream,
 										FOOTER_PDF_VI,
 										FOOTER_PDF_EN,
@@ -403,10 +562,10 @@ public class ExamService {
 			document.addPage(page);
 			contentStream.close();
 			contentStream = new PDPageContentStream(document, page);
-			drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
+			exportFileService.drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 25, 13);
 
 			// Correct answers
-			drawFooterContent(
+			exportFileService.drawFooterContent(
 					contentStream,
 					FOOTER_PDF_VI,
 					FOOTER_PDF_EN,
@@ -496,7 +655,7 @@ public class ExamService {
 					document.addPage(page);
 					contentStream.close();
 					contentStream = new PDPageContentStream(document, page);
-					drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 297, 13);
+					exportFileService.drawPageNumber(contentStream, ++pageNo, customFontManual, 11, 297, 13);
 					startYColumn = borderHeight - 20;
 				}
 			}
@@ -506,161 +665,81 @@ public class ExamService {
 			document.save(baos);
 			document.close();
 
-			if (baos.size() > 0) {
-				return ResponseEntity.ok()
-						.header(
-								HttpHeaders.CONTENT_DISPOSITION,
-								"attachment;  filename=\"" + exam.get().getExamName() + ".pdf\"; charset=UTF-8")
-						.contentType(MediaType.APPLICATION_PDF)
-						.body(baos.toByteArray());
-			} else {
-				return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-						.body(
-								CommonResponse.builder()
-										.body(Map.of("message", "Cannot convert data to pdf!!"))
-										.build()
-										.getBody());
-			}
+			return ResponseEntity.ok()
+					.header(
+							HttpHeaders.CONTENT_DISPOSITION,
+							"attachment;  filename=\"" + exam.get().getExamName() + ".pdf\"; charset=UTF-8")
+					.contentType(MediaType.APPLICATION_PDF)
+					.body(baos.toByteArray());
 
 		} catch (Exception e) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body(
-							CommonResponse.builder()
-									.body(Map.of("message", "Something error!!"))
-									.build()
-									.getBody());
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(EXPORT_EXAM_FAIL));
 		}
 	}
 
-	private void drawTableOfPointAndComment(
-			PDPageContentStream contentStream,
-			String pointHeader,
-			String commentHeader,
-			float leftMargin,
-			float rightMargin,
-			float startYTable,
-			float cellHeight,
-			PDFont customFont,
-			float fontSize)
-			throws IOException {
-		// Set the positions and dimensions
+	public ResponseEntity<?> deleteExam(Long id, String token) throws JsonProcessingException {
+		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
 
-		float cellWidth = (rightMargin - leftMargin) / 2;
-		float rowHeightTable = cellHeight * 4;
+		Optional<Exam> examOpt = examRepository.findById(id);
+		if (examOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
+		}
 
-		// Draw the table border
-		float tableX = leftMargin;
-		float tableY = startYTable;
-		float tableWidth = cellWidth * 2;
-		float tableHeight = rowHeightTable + cellHeight;
-		contentStream.setLineWidth(1);
-		contentStream.addRect(tableX, tableY, tableWidth, tableHeight);
-		contentStream.stroke();
+		if (userRoles.contains(USER_EXAM_ROLE)) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
+		}
 
-		// Draw a line for column separation
-		float separationX = leftMargin + cellWidth;
-		float separationYStart = tableY;
-		float separationYEnd = tableY + tableHeight;
-		contentStream.moveTo(separationX, separationYStart);
-		contentStream.lineTo(separationX, separationYEnd);
-		contentStream.stroke();
+		if (userRoles.contains(ADMIN_ROLE) && examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG
+				|| (userID.compareTo(examOpt.get().getOwnerId()) != 0
+						&& examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG)) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_ALLOW_REMOVE_EXAM));
+		}
 
-		// Draw a line for "Score" column
-		float scoreX = leftMargin;
-		float scoreYStart = tableY + rowHeightTable;
-		contentStream.moveTo(scoreX, scoreYStart);
-		contentStream.lineTo(scoreX + cellWidth, scoreYStart);
-		contentStream.stroke();
-		contentStream.beginText();
-		contentStream.setFont(customFont, fontSize);
-		contentStream.newLineAtOffset(scoreX + 15, scoreYStart + 2);
-		contentStream.showText(pointHeader);
-		contentStream.endText();
+		if (checkExamValidToModify(examOpt.get().getId())) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(EXAM_IS_BEING_USE));
+		}
 
-		// Draw a line for "Comments" column
-		float commentsX = leftMargin + cellWidth;
-		float commentsYStart = tableY + rowHeightTable;
-		contentStream.moveTo(commentsX, commentsYStart);
-		contentStream.lineTo(commentsX + cellWidth, commentsYStart);
-		contentStream.stroke();
-		contentStream.beginText();
-		contentStream.setFont(customFont, fontSize);
-		contentStream.newLineAtOffset(commentsX + 15, commentsYStart + 2);
-		contentStream.showText(commentHeader);
-		contentStream.endText();
+		examRepository.delete(examOpt.get());
+		contestRepository.deleteAllByExamId(id);
+		questionRepository.deleteQuestionByExamId(id);
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(DELETE_EXAM_INFORMATION_SUCCESS));
 	}
 
-	private void drawContent(
-			PDPageContentStream contentStream,
-			String content,
-			PDFont customFont,
-			Color textColor,
-			float fontSize,
-			float x,
-			float y)
-			throws IOException {
-		contentStream.beginText();
-		contentStream.setFont(customFont, fontSize);
-		contentStream.setNonStrokingColor(textColor);
-		contentStream.newLineAtOffset(x, y);
-		contentStream.showText(content);
-		contentStream.endText();
+	public ResponseEntity<?> editExam(String token, EditExamCommand command)
+			throws JsonProcessingException {
+		var examOpt = examRepository.findById(command.getId());
+		if (examOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
+		}
+
+		if (checkExamValidToModify(examOpt.get().getId())) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(EXAM_IS_BEING_USE));
+		}
+
+		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+
+		return null;
 	}
 
-	private void drawContentInline(
-			PDPageContentStream contentStream,
-			String contentLeft,
-			String contentRight,
-			PDFont customFont,
-			Color textColor,
-			float fontSize,
-			float xRight,
-			float yRight,
-			float xLeft)
-			throws IOException {
-		contentStream.beginText();
-		contentStream.setFont(customFont, fontSize);
-		contentStream.setNonStrokingColor(textColor);
-		contentStream.newLineAtOffset(xRight, yRight);
-		contentStream.showText(contentLeft);
-		contentStream.newLineAtOffset(xLeft - xRight, 0);
-		contentStream.showText(contentRight);
-		contentStream.endText();
+	public ResponseEntity<?> getExamsDurationOption() {
+		return GenerateResponseHelper.generateDataResponse(
+				HttpStatus.OK, Map.of(DATA_KEY, examRepository.getListDuration()));
 	}
 
-	private void drawPageNumber(
-			PDPageContentStream contentStream,
-			int pageNo,
-			PDFont customFont,
-			float fontSize,
-			float x,
-			float y)
-			throws IOException {
-		contentStream.beginText();
-		contentStream.setFont(customFont, fontSize);
-		contentStream.newLineAtOffset(x, y);
-		contentStream.showText(String.valueOf(pageNo));
-		contentStream.endText();
-	}
-
-	private void drawFooterContent(
-			PDPageContentStream contentStream,
-			String contentVn,
-			String contentEn,
-			PDFont customFont,
-			Boolean languageFlag,
-			Color textColor,
-			Color textColorReset,
-			float fontSize,
-			float x,
-			float y)
-			throws IOException {
-		contentStream.beginText();
-		contentStream.setFont(customFont, fontSize);
-		contentStream.setNonStrokingColor(textColor);
-		contentStream.newLineAtOffset(x, y);
-		contentStream.showText(languageFlag ? contentVn : contentEn);
-		contentStream.setNonStrokingColor(textColorReset);
-		contentStream.endText();
+	private boolean checkExamValidToModify(Long id) {
+		List<Contest> contests =
+				contestRepository.findAllByExamIdAndEndAtAfter(id, LocalDateTime.now());
+		return contests.size() > 0;
 	}
 }

@@ -1,9 +1,8 @@
 package com.example.demo.command.contest;
 
-import java.time.LocalDateTime;
-
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
+import java.time.LocalDateTime;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
