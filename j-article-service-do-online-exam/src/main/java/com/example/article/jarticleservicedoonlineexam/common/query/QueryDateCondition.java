@@ -1,15 +1,15 @@
-package com.example.demo.common.query;
+package com.example.article.jarticleservicedoonlineexam.common.query;
 
-import com.example.demo.command.QuerySearchCommand;
-import org.springframework.beans.factory.annotation.Value;
+import static com.example.article.jarticleservicedoonlineexam.constants.SQLConstants.*;
 
+import com.example.article.jarticleservicedoonlineexam.command.QuerySearchCommand;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
-
-import static com.example.demo.constant.SQLConstants.*;
+import org.springframework.beans.factory.annotation.Value;
 
 public class QueryDateCondition {
+	// TODO: check for loading datetime format pattern
 	private static String DEFAULT_DATE_FORMAT;
 
 	@Value("${app.format.date}")
