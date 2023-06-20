@@ -19,10 +19,10 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Configuration
 @EnableJpaAuditing(
-		auditorAwareRef = "auditorProvider",
+//		auditorAwareRef = "auditorProvider",
 		dateTimeProviderRef = "auditingDateTimeProvider")
 public class JpaConfig {
-	@Autowired private JwtTokenUtil jwtTokenUtil;
+//	@Autowired private JwtTokenUtil jwtTokenUtil;
 
 	private static final ThreadLocal<String> REGISTERED_USER = new ThreadLocal<>();
 
@@ -39,22 +39,22 @@ public class JpaConfig {
 		return () -> Optional.of(OffsetDateTime.now());
 	}
 
-	@Bean(name = "auditorProvider")
-	public AuditorAware<String> auditorAware() {
-		return () -> {
-			String userName = null;
-			HttpServletRequest request =
-					((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
-			String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
-			if (accessToken != null && accessToken.startsWith(BEARER_PREFIX)) {
-				var token = accessToken.substring(7);
-				try {
-					userName = jwtTokenUtil.getuserNameFromToken(token);
-				} catch (JsonProcessingException e) {
-					e.printStackTrace();
-				}
-			}
-			return Optional.of(userName);
-		};
-	}
+//	@Bean(name = "auditorProvider")
+//	public AuditorAware<String> auditorAware() {
+//		return () -> {
+//			String userName = null;
+//			HttpServletRequest request =
+//					((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+//			String accessToken = request.getHeader(HttpHeaders.AUTHORIZATION);
+//			if (accessToken != null && accessToken.startsWith(BEARER_PREFIX)) {
+//				var token = accessToken.substring(7);
+//				try {
+//					userName = jwtTokenUtil.getuserNameFromToken(token);
+//				} catch (JsonProcessingException e) {
+//					e.printStackTrace();
+//				}
+//			}
+//			return Optional.of(userName);
+//		};
+//	}
 }
