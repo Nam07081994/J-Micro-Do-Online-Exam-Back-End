@@ -9,7 +9,7 @@ public class QueryOrderByCondition {
 			case 1 -> ORDER_STATEMENT + "endPoint" + " ASC ";
 			case 2 -> ORDER_STATEMENT + "endPoint" + " DESC ";
 			case 3 -> ORDER_STATEMENT + "createdAt" + " ASC ";
-			case 4 -> ORDER_STATEMENT + "createAt" + " DESC ";
+			case 4 -> ORDER_STATEMENT + "createdAt" + " DESC ";
 			case 5 -> ORDER_STATEMENT + "roleName" + " ASC ";
 			case 6 -> ORDER_STATEMENT + "roleName" + " DESC ";
 			case 7 -> ORDER_STATEMENT + "userName" + " ASC ";

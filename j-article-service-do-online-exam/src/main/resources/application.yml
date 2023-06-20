@@ -1,0 +1,40 @@
+server:
+  port: 8767
+
+#config eureka client to connect eureka server
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      default-zone: http://localhost:8761/eureka/
+    enabled: true
+#spring config
+spring:
+  application:
+    name: article-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/online-exam-db-2
+    username: postgres
+    password: 12345
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    database: postgresql
+#app custom config
+app:
+  url:
+    upload-file-endpoint: http://localhost:8766/api/v1/files
+    update-file-endpoint: http://localhost:8766/api/v1/files/image/updateImage
+  i18n:
+    baseName: messages
+    defaultLocale: en
+  format:
+    date: yyyy-MM-dd HH:mm:ss.ffffff
