@@ -9,6 +9,7 @@ redis:
 eureka:
   instance:
     hostname: localhost
+    prefer-ip-address: true
   client:
     register-with-eureka: true
     fetch-registry: true
@@ -23,15 +24,27 @@ spring:
     redis:
       host: localhost
       port: 50988
-      connect-timeout: 2s
-      timeout: 1s
+      connect-timeout: 15s
+      timeout: 14s
 #config for circuit breaker
   cloud:
+    discovery:
+      enabled: true
     circuitbreaker:
       resilience4j:
         enabled: true
+        configs:
+          default:
+            circuitBreakerConfig:
+              failureRateThreshold: 50
+              waitDurationInOpenState: 10000
+            timeLimiterConfig:
+              timeoutDuration: 10000
 #config cloud gateway for router
     gateway:
+      discovery:
+        locator:
+          enabled: true
       routes:
         - id: authorization-service
           uri: http://localhost:8764/
@@ -159,13 +172,30 @@ spring:
                 redis-rate-limiter.burstCapacity: 2
 
 management:
+  security:
+    enabled: false
+  server:
+    port: 8763
+  endpoint:
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+    health:
+      show-details: always
+      show-components: always
+      probes:
+        enabled: true
+    shutdown:
+      enabled: true
+    info:
+      env:
+        enabled: true
+      enabled: true
   endpoints:
     web:
       exposure:
-        include: health, info
-  endpoint:
-    health:
-      show-details: always
+        include: prometheus, metrics, info, health, shutdown, beans
 
 app:
   secret: 5367566B59703373367639792F423F4528482B4D6251655468576D5A71347437

@@ -119,4 +119,10 @@ public class EndPointService {
 	public boolean checkEndpointExist(Long id) {
 		return endPointRepository.findById(id).isPresent();
 	}
+
+	public ResponseEntity<?> getPublicEndPoint(String type){
+		var publicEndPoints = endPointRepository.findByEndPoint(type);
+		return GenerateResponseHelper.generateDataResponse(
+				HttpStatus.OK, Map.of(StringConstant.DATA_KEY, publicEndPoints));
+	}
 }
