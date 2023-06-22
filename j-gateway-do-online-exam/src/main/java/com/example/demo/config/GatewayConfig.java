@@ -50,7 +50,7 @@ public class GatewayConfig {
 								new Resilience4JConfigBuilder(id)
 										.circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
 										.timeLimiterConfig(
-												TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(2)).build())
+												TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(15)).build())
 										.build());
 	}
 }

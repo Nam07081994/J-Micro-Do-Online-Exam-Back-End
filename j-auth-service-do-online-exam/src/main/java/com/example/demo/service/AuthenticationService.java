@@ -116,7 +116,7 @@ public class AuthenticationService {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_ROLE_USER));
 		}
-		//TODO: add user limit upload umber
+		//TODO: add user limit upload number
 		var user =
 				User.builder()
 						.userName(command.getUserName())

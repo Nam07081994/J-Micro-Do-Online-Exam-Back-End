@@ -50,6 +50,8 @@ public class StringConstant {
 
 	public static final String COMMA_STRING_CHARACTER = ",";
 
+	public static final String HYPHEN_STRING_CHARACTER = "-";
+
 	public static final String DOT_STRING_CHARACTER = ".";
 
 	public static final String EMPTY_STRING = "";
@@ -70,4 +72,41 @@ public class StringConstant {
 	public static final String LESS_THAN_OPERATOR = "<=";
 
 	public static final String PERCENT_OPERATOR = "%";
+
+	public static final String EMAIL_SUBJECT = "DO-ONLINE CONTEST INFORMATION";
+
+	public static final String EMAIL_BODY = "<html>"
+			+ "<body>"
+			+ "<p>Dear %s,</p>"
+			+ "<p>You successfully submitted your contest. Each time you submit a contest, you receive a unique login information. You can view your information below.</p>"
+			+ "<h3>Account Contest details:</h3>"
+			+ "<ul>"
+			+ "<li>Contest ID: %s</li>"
+			+ "<li>User name: %s</li>"
+			+ "<li>Password: %s</li>"
+			+ "<li>Link login: <a href=\"%s\">%s</a></li>"
+			+ "</ul>"
+			+ "<h3>Note:</h3>"
+			+ "<ol>"
+			+ "<li>Please log in on time for the contest. If you log in after the test starts or after the test ends, your test will not be recorded.</li>"
+			+ "<ul>"
+			+ "<li>Contest start time: %s</li>"
+			+ "<li>Contest end time: %s</li>"
+			+ "</ul>"
+			+ "<li>If you quit midway through the contest, you cannot enter the contest again.</li>"
+			+ "</ol>"
+			+ "<p>Good luck with the contest!</p>"
+			+ "<p>DO-ONLINE</p>"
+			+ "</body>"
+			+ "</html>";
+
+	public static final String LOGIN_CONTEST_LINK = "abc.com";
+
+	public static final String EMAIL_WHILE_SENDING_ERROR = "Error while sending mail!!!";
+
+	public static final String EMAIL_SENDING_SUCCESS = "Send email success";
+
+	public static final String EXAM_USERNAME_PREFIX = "USER";
+
+	public static final String EXAM_PASSWORD_PREFIX = "PWD";
 }

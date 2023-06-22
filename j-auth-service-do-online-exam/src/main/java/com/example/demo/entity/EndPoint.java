@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.example.demo.Enum.EndPointType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -35,6 +36,9 @@ public class EndPoint {
 
 	@Column(name = "end_point", nullable = false)
 	private String endPoint;
+
+	@Column(name = "type", nullable = false)
+	private EndPointType type;
 
 	@Column(name = "created_by")
 	@CreatedBy

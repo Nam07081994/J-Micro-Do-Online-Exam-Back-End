@@ -8,6 +8,9 @@ spring:
 
 #config eureka client to connect eureka server but fetchRegistry false
 eureka:
+  instance:
+    hostname: localhost
+    prefer-ip-address: true
   client:
     registerWithEureka: false
     fetchRegistry: false

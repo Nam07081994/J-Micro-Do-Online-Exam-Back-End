@@ -1,5 +1,7 @@
 package com.example.demo.controller;
 
+import java.util.List;
+
 import com.example.demo.command.CommonSearchCommand;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.service.EndPointService;
@@ -47,5 +49,10 @@ public class EndpointController {
 	@DeleteMapping("/delete")
 	public ResponseEntity<?> deleteEndPoint(@RequestParam("id") Long id) {
 		return endPointService.deleteEndPoint(id);
+	}
+
+	@GetMapping("/public")
+	public ResponseEntity<?> getPublicEndPoints(@RequestParam(name = "type", required = false) String type){
+		return endPointService.getPublicEndPoint(type);
 	}
 }
