@@ -1,4 +1,4 @@
-package constants;
+package com.example.file.jfileservicedoonlineexam.constants;
 
 public class AllConstants {
 	public static final String STATIC_FOLDER_PATH =

@@ -3,7 +3,7 @@ package com.example.file.jfileservicedoonlineexam.controller;
 import com.example.file.jfileservicedoonlineexam.command.UpdateImageRequest;
 import com.example.file.jfileservicedoonlineexam.command.UploadRequest;
 import com.example.file.jfileservicedoonlineexam.service.FileService;
-import constants.AllConstants;
+import com.example.file.jfileservicedoonlineexam.constants.AllConstants;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import lombok.AllArgsConstructor;

@@ -3,7 +3,7 @@ package com.example.file.jfileservicedoonlineexam.service;
 import com.example.file.jfileservicedoonlineexam.command.UpdateImageRequest;
 import com.example.file.jfileservicedoonlineexam.command.UploadRequest;
 import com.example.file.jfileservicedoonlineexam.common.UUIDHandler;
-import constants.AllConstants;
+import com.example.file.jfileservicedoonlineexam.constants.AllConstants;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
