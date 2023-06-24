@@ -69,7 +69,7 @@ public class FileService {
 	}
 
 	public String updateImage(UpdateImageRequest req) throws IOException {
-		removeFile(req.getOldImagePath(), AllConstants.IMAGE_FOLDER_TYPE);
+		//removeFile(req.getOldImagePath(), AllConstants.IMAGE_FOLDER_TYPE);
 		UploadRequest uploadRequest =
 				new UploadRequest(req.getDomain(), AllConstants.IMAGE_FOLDER_TYPE, req.getFile());
 		return saveFile(uploadRequest);

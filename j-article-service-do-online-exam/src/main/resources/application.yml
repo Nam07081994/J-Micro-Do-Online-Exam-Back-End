@@ -37,4 +37,4 @@ app:
     baseName: messages
     defaultLocale: en
   format:
-    date: yyyy-MM-dd HH:mm:ss.ffffff
+    date: yyyy-MM-dd HH:mm:ss

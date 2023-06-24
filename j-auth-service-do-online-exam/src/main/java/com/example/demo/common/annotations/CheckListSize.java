@@ -10,6 +10,7 @@ package com.example.demo.common.annotations;
 	java.lang.annotation.ElementType.PARAMETER,
 	java.lang.annotation.ElementType.TYPE_USE
 })
+@java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
 public @interface CheckListSize {
 	String message() default "Invalid list input";
 

@@ -35,4 +35,10 @@ public class ApplicationExceptionHandler {
 	public ResponseEntity<?> handleJsonProcessingException() {
 		return GenerateResponseHelper.generateMessageResponse(HttpStatus.BAD_REQUEST, "");
 	}
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(InvalidDateFormatException.class)
+	public ResponseEntity<?> handleInvalidDateFormatException(InvalidDateFormatException ex) {
+		return GenerateResponseHelper.generateMessageResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+	}
 }

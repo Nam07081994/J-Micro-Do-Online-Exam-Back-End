@@ -2,6 +2,11 @@ package com.example.demo.constant;
 
 public class Constant {
 
+	//
+	public static final Integer CREATE_EXAM_FLAG = 1;
+
+	public static final Integer CREATE_CONTEST_FLAG = 2;
+	//
 	public static final String DOMAIN_KEY = "domain";
 
 	public static final String FILE_KEY = "file";
@@ -19,6 +24,8 @@ public class Constant {
 	public static final String EMPTY_STRING = "";
 
 	public static final String DOT_STRING_CHARACTER = ".";
+
+	public static final String COMMA_STRING_CHARACTER = ",";
 
 	// token constants
 	public static final String USER_ID_TOKEN_KEY = "aud";

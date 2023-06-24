@@ -19,6 +19,5 @@ public class UpdateImageRequest {
 	@NotEmpty(message = "old image path is mandatory")
 	private String oldImagePath;
 
-	@MultipleFileExtension
-	private MultipartFile file;
+	@MultipleFileExtension private MultipartFile file;
 }

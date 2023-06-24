@@ -1,11 +1,8 @@
 package com.example.demo.command;
 
-import com.example.demo.common.annotations.CheckListSize;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
+import java.time.LocalDateTime;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

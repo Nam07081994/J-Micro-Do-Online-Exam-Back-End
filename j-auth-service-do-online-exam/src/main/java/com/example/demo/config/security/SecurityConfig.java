@@ -6,7 +6,6 @@ import com.example.demo.config.security.SecurityCustom.CustomAuthenticationEntry
 import com.example.demo.config.security.SecurityCustom.CustomUserDetailsService;
 import com.example.demo.config.security.SecurityCustom.Filter.JwtTokenAuthenticationFilter;
 import jakarta.servlet.http.HttpServletRequest;
-
 import java.util.Arrays;
 import java.util.Collections;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,7 +56,7 @@ public class SecurityConfig {
 							@Override
 							public CorsConfiguration getCorsConfiguration(HttpServletRequest request) {
 								CorsConfiguration config = new CorsConfiguration();
-								 config.setAllowedOrigins(Collections.singletonList("*"));
+								config.setAllowedOrigins(Collections.singletonList("*"));
 								config.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 								config.setAllowCredentials(true);
 								config.setAllowedHeaders(Collections.singletonList("*"));
@@ -74,7 +73,8 @@ public class SecurityConfig {
 				//										.ignoringRequestMatchers("/api/v1/auth/register", "/api/v1/auth/login")
 				//										.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
 				.authorizeHttpRequests()
-				.requestMatchers("/api/v1/auth/register", "/api/v1/auth/login")
+				.requestMatchers(
+						"/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/getEndPointsByRoles")
 				.permitAll()
 				.anyRequest()
 				.authenticated()

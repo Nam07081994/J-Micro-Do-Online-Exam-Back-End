@@ -2,8 +2,8 @@ package com.example.file.jfileservicedoonlineexam.controller;
 
 import com.example.file.jfileservicedoonlineexam.command.UpdateImageRequest;
 import com.example.file.jfileservicedoonlineexam.command.UploadRequest;
-import com.example.file.jfileservicedoonlineexam.service.FileService;
 import com.example.file.jfileservicedoonlineexam.constants.AllConstants;
+import com.example.file.jfileservicedoonlineexam.service.FileService;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import lombok.AllArgsConstructor;
@@ -40,13 +40,15 @@ public class FilesController {
 		return new ResponseEntity<>(file, headers, HttpStatus.OK);
 	}
 
-	@PostMapping("/image/updateImage")
+	@PostMapping(
+			value = "/image/updateImage",
+			consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 	public ResponseEntity<?> updateImage(@ModelAttribute @Valid UpdateImageRequest req)
 			throws IOException {
 		return new ResponseEntity<>(fileService.updateImage(req), HttpStatus.OK);
 	}
 
-	@PostMapping
+	@PostMapping(consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
 	public ResponseEntity<?> saveFile(@ModelAttribute @Valid UploadRequest req) throws IOException {
 		return new ResponseEntity<>(fileService.saveFile(req), HttpStatus.OK);
 	}

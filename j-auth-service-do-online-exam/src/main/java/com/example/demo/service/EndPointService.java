@@ -4,17 +4,19 @@ import static com.example.demo.constant.StringConstant.ENDPOINT_KEY;
 import static com.example.demo.constant.TranslationCodeConstant.*;
 
 import com.example.demo.command.CommonSearchCommand;
-import com.example.demo.common.QueryCondition;
-import com.example.demo.common.QueryDateCondition;
+import com.example.demo.common.query.QueryCondition;
+import com.example.demo.common.query.QueryDateCondition;
 import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.constant.StringConstant;
 import com.example.demo.dto.EndpointOptionDto;
 import com.example.demo.entity.EndPoint;
 import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.repository.AbstractRepositoryImpl;
 import com.example.demo.repository.EndPointRepository;
 import java.util.*;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -30,10 +32,10 @@ public class EndPointService {
 	private TranslationService translationService;
 
 	public ResponseEntity<?> endPointService(CommonSearchCommand command, String name)
-			throws ExecuteSQLException {
+			throws ExecuteSQLException, InvalidDateFormatException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (!name.isEmpty()) {
+		if (!StringUtils.isEmpty(name)) {
 			searchParams.put(
 					ENDPOINT_KEY,
 					QueryCondition.builder().operation(StringConstant.LIKE_OPERATOR).value(name).build());
@@ -118,11 +120,5 @@ public class EndPointService {
 
 	public boolean checkEndpointExist(Long id) {
 		return endPointRepository.findById(id).isPresent();
-	}
-
-	public ResponseEntity<?> getPublicEndPoint(String type){
-		var publicEndPoints = endPointRepository.findByEndPoint(type);
-		return GenerateResponseHelper.generateDataResponse(
-				HttpStatus.OK, Map.of(StringConstant.DATA_KEY, publicEndPoints));
 	}
 }

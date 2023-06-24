@@ -1,9 +1,10 @@
-package com.jnotificationservicedoonlineexam.common.query;
+package com.example.demo.common.query;
 
-import static com.jnotificationservicedoonlineexam.constants.SQLConstants.*;
+import static com.example.demo.constant.StringConstant.CREATED_AT_KEY;
 
-import com.jnotificationservicedoonlineexam.command.QuerySearchCommand;
-import com.jnotificationservicedoonlineexam.exceptions.InvalidDateFormatException;
+import com.example.demo.command.CommonSearchCommand;
+import com.example.demo.constant.StringConstant;
+import com.example.demo.exceptions.InvalidDateFormatException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -22,7 +23,7 @@ public class QueryDateCondition {
 	}
 
 	public static boolean generate(
-			QuerySearchCommand command, Map<String, QueryCondition> searchParams)
+			CommonSearchCommand command, Map<String, QueryCondition> searchParams)
 			throws InvalidDateFormatException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT);
 		try {
@@ -40,7 +41,7 @@ public class QueryDateCondition {
 						CREATED_AT_KEY,
 						QueryCondition.builder()
 								.value(LocalDateTime.parse(command.getFrom_date(), formatter))
-								.operation(GREATER_THAN_OPERATION)
+								.operation(StringConstant.GREATER_THAN_OPERATION)
 								.build());
 			}
 
@@ -48,7 +49,7 @@ public class QueryDateCondition {
 				searchParams.put(
 						CREATED_AT_KEY,
 						QueryCondition.builder()
-								.operation(LESS_THAN_OPERATOR)
+								.operation(StringConstant.LESS_THAN_OPERATOR)
 								.value(LocalDateTime.parse(command.getTo_date(), formatter))
 								.build());
 			}

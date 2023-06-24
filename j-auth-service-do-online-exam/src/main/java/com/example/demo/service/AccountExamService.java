@@ -24,23 +24,17 @@ import com.example.demo.entity.AccountExam;
 import com.example.demo.entity.Role;
 import com.example.demo.repository.AccountExamRepository;
 import com.example.demo.repository.RoleRepository;
-
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeMessage;
-import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -53,17 +47,18 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AccountExamService {
-	@Value("${spring.mail.username}") private String sender;
+	@Value("${spring.mail.username}")
+	private String sender;
 
 	@Autowired private PasswordEncoder passwordEncoder;
+
+	@Autowired private JavaMailSender mailSender;
 
 	@Autowired private RoleRepository roleRepository;
 
 	@Autowired private TranslationService translationService;
 
 	@Autowired private AccountExamRepository accountExamRepository;
-
-	@Autowired private JavaMailSender mailSender;
 
 	public ResponseEntity<?> login(LoginAccountExamCommand command) {
 		Optional<AccountExam> accountOpt =
@@ -75,7 +70,8 @@ public class AccountExamService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_USER_INFORMATION));
 		}
 		LocalDateTime loginTime = LocalDateTime.now();
-		if(accountOpt.get().getStartAt().isAfter(loginTime) || accountOpt.get().getEndAt().isAfter(loginTime)) {
+		if (accountOpt.get().getStartAt().isAfter(loginTime)
+				|| accountOpt.get().getEndAt().isAfter(loginTime)) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(CONTEST_TIME_ERROR));
 		}
@@ -85,11 +81,11 @@ public class AccountExamService {
 				Map.of(
 						StringConstant.ACCESS_TOKEN_KEY,
 						JwtTokenUtil.generateToken(
+								EMPTY_STRING,
 								accountOpt.get().getEmail(),
 								StringConstant.USER_EXAM_ROLE_STRING,
 								String.valueOf(accountOpt.get().getId()))));
 	}
-
 
 	public ResponseEntity<?> registerAccountsExam(CreateAccountsExamCommand command) {
 		Optional<Role> userExamOpt =
@@ -98,37 +94,50 @@ public class AccountExamService {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_ROLE_INFORMATION));
 		}
-		if(command.getUserInfo().isEmpty()){
+		if (command.getUserInfo().isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(EMPTY_USER_INFO));
 		}
 		Map<String, List<String>> emailMapBody = new HashMap<>();
-		command.getUserInfo().forEach((userName, email) -> {
-			String userNameAndPassword = generateUsernameAndPassword();
-			String[] userNameAndPasswordArr =
-					userNameAndPassword.split(StringConstant.COMMA_STRING_CHARACTER);
-			AccountExam newAccount =
-					AccountExam.builder()
-							.username(userNameAndPasswordArr[0])
-							.email(email)
-							.password(userNameAndPasswordArr[1])
-							.role(StringConstant.USER_EXAM_ROLE_STRING)
-							.startAt(command.getStartAt())
-							.endAt(command.getEndAt())
-							.contestID(command.getContestID())
-							.build();
-			accountExamRepository.save(newAccount);
-			List<String> infoList = new ArrayList<>();
-			infoList.add(newAccount.getPassword());
-			infoList.add(userNameAndPasswordArr[0]);
-			infoList.add(newAccount.getEmail());
-			emailMapBody.put(userName, infoList);
-		});
+		command
+				.getUserInfo()
+				.forEach(
+						(userName, email) -> {
+							String userNameAndPassword = generateUsernameAndPassword();
+							String[] userNameAndPasswordArr =
+									userNameAndPassword.split(StringConstant.COMMA_STRING_CHARACTER);
+							AccountExam newAccount =
+									AccountExam.builder()
+											.username(userNameAndPasswordArr[0])
+											.email(email)
+											.password(userNameAndPasswordArr[1])
+											.role(StringConstant.USER_EXAM_ROLE_STRING)
+											.startAt(command.getStartAt())
+											.endAt(command.getEndAt())
+											.contestID(command.getContestID())
+											.build();
+							accountExamRepository.save(newAccount);
+							List<String> infoList = new ArrayList<>();
+							infoList.add(newAccount.getPassword());
+							infoList.add(userNameAndPasswordArr[0]);
+							infoList.add(newAccount.getEmail());
+							emailMapBody.put(userName, infoList);
+						});
 		for (Map.Entry<String, List<String>> entry : emailMapBody.entrySet()) {
 			String userName = entry.getKey();
 			List<String> value = entry.getValue();
 
-			String emailBody = String.format(EMAIL_BODY, userName, command.getContestID(), value.get(1), value.get(0), LOGIN_CONTEST_LINK, LOGIN_CONTEST_LINK, formatDateTime(command.getStartAt()), formatDateTime(command.getEndAt()));
+			String emailBody =
+					String.format(
+							EMAIL_BODY,
+							userName,
+							command.getContestID(),
+							value.get(1),
+							value.get(0),
+							LOGIN_CONTEST_LINK,
+							LOGIN_CONTEST_LINK,
+							formatDateTime(command.getStartAt()),
+							formatDateTime(command.getEndAt()));
 			var emailSend = sendMail(value.get(2), emailBody, EMAIL_SUBJECT);
 
 			if (emailSend.equals(EMAIL_WHILE_SENDING_ERROR)) {
@@ -140,49 +149,54 @@ public class AccountExamService {
 	}
 
 	public void removeAccountsExam() {
+		// TODO: specify condition for remove accounts-exam
 		accountExamRepository.deleteAll();
 	}
 
 	private String generateUsernameAndPassword() {
 		StringBuilder secret = new StringBuilder(EMPTY_STRING);
-		secret.append(EXAM_USERNAME_PREFIX + UUID.randomUUID().toString().replaceAll(HYPHEN_STRING_CHARACTER, EMPTY_STRING).substring(0,12));
+		secret
+				.append(EXAM_USERNAME_PREFIX)
+				.append(
+						UUID.randomUUID().toString().replaceAll(HYPHEN_STRING_CHARACTER, EMPTY_STRING), 0, 12);
 		secret.append(StringConstant.COMMA_STRING_CHARACTER);
-		secret.append(EXAM_PASSWORD_PREFIX + UUID.randomUUID().toString().replaceAll(HYPHEN_STRING_CHARACTER, EMPTY_STRING).substring(0,12));
+		secret
+				.append(EXAM_PASSWORD_PREFIX)
+				.append(
+						UUID.randomUUID().toString().replaceAll(HYPHEN_STRING_CHARACTER, EMPTY_STRING), 0, 10);
+
 		return secret.toString();
 	}
 
-	public String sendEmails(List<String>emails, String body, String subject) {
-			var successfulCount = 0;
-			for (String email : emails) {
-				String result = sendMail(email, body, subject);
-				if (result == null) {
-					successfulCount++;
-				}
+	public String sendEmails(List<String> emails, String body, String subject) {
+		var successfulCount = 0;
+		for (String email : emails) {
+			String result = sendMail(email, body, subject);
+			if (result == null) {
+				successfulCount++;
 			}
+		}
 
-			if (successfulCount == emails.size()) {
-				return EMAIL_SENDING_SUCCESS;
-			} else {
-				return EMAIL_WHILE_SENDING_ERROR;
-			}
+		if (successfulCount == emails.size()) {
+			return EMAIL_SENDING_SUCCESS;
+		} else {
+			return EMAIL_WHILE_SENDING_ERROR;
+		}
 	}
 
 	@Transactional
 	public String sendMail(String email, String body, String subject) {
-		boolean html = true;
 		MimeMessage mimeMessage = mailSender.createMimeMessage();
 		MimeMessageHelper mimeMessageHelper;
 		try {
-			mimeMessageHelper
-					= new MimeMessageHelper(mimeMessage, true);
+			mimeMessageHelper = new MimeMessageHelper(mimeMessage, true);
 			mimeMessageHelper.setFrom(sender);
 			mimeMessageHelper.setTo(email);
 			mimeMessageHelper.setText(body, true);
 			mimeMessageHelper.setSubject(subject);
 			mailSender.send(mimeMessage);
 			return EMAIL_SENDING_SUCCESS;
-		}
-		catch (MessagingException e) {
+		} catch (MessagingException e) {
 			return EMAIL_WHILE_SENDING_ERROR;
 		}
 	}

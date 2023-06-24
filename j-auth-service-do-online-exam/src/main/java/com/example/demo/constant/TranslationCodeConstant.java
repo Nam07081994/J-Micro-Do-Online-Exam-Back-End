@@ -19,6 +19,8 @@ public class TranslationCodeConstant {
 
 	public static final String UPDATE_USER_THUMBNAIL_SUCCESS = "update-user-thumbnail-success";
 
+	public static final String UPDATE_USER_INFO_SUCCESS = "update-user-info-success";
+
 	public static final String ERROR_UPDATE_USER_THUMBNAIL = "update-user-thumbnail-error";
 
 	// validate input msg

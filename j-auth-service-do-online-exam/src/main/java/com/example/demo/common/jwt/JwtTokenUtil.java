@@ -1,6 +1,9 @@
 package com.example.demo.common.jwt;
 
 import com.example.demo.constant.StringConstant;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -14,6 +17,8 @@ import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.jwt.Jwt;
+import org.springframework.security.jwt.JwtHelper;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -32,8 +37,9 @@ public class JwtTokenUtil {
 		JwtTokenUtil.expiration = expiration;
 	}
 
-	public static String generateToken(String email, String role, String userID) {
+	public static String generateToken(String username, String email, String role, String userID) {
 		Map<String, Object> claims = new HashMap<>();
+		claims.put("username", username);
 		return createToken(claims, email, role, userID);
 	}
 
@@ -105,5 +111,15 @@ public class JwtTokenUtil {
 		} catch (ExpiredJwtException e) {
 			return true;
 		}
+	}
+
+	public static String getUserInfoFromToken1(String token, String key)
+			throws JsonProcessingException {
+		Jwt jwt = JwtHelper.decode(token);
+		String claims = jwt.getClaims();
+		ObjectMapper objectMapper = new ObjectMapper();
+		Map<String, Object> claimsMap = objectMapper.readValue(claims, new TypeReference<>() {});
+
+		return claimsMap.get(key).toString();
 	}
 }

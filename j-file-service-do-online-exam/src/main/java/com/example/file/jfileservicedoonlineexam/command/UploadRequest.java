@@ -19,6 +19,5 @@ public class UploadRequest {
 	@NotEmpty(message = "fileType is mandatory")
 	private String fileType;
 
-	@MultipleFileExtension
-	private MultipartFile file;
+	@MultipleFileExtension private MultipartFile file;
 }
