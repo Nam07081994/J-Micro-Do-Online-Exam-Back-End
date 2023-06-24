@@ -22,7 +22,7 @@ spring:
 #rabbitmq config
 app:
   format:
-    date: yyyy-MM-dd HH:mm:ss.ffffff
+    date: yyyy-MM-dd HH:mm:ss
   rabbitmq:
     exchanges:
       internal:

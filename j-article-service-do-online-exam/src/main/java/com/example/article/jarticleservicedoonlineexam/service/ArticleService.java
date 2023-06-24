@@ -14,12 +14,14 @@ import com.example.article.jarticleservicedoonlineexam.common.response.GenerateR
 import com.example.article.jarticleservicedoonlineexam.dto.ArticleDto;
 import com.example.article.jarticleservicedoonlineexam.entity.Article;
 import com.example.article.jarticleservicedoonlineexam.exceptions.ExecuteSQLException;
+import com.example.article.jarticleservicedoonlineexam.exceptions.InvalidDateFormatException;
 import com.example.article.jarticleservicedoonlineexam.repository.ArticleRepository;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -45,16 +47,16 @@ public class ArticleService {
 	@Autowired private TranslationService translationService;
 
 	public ResponseEntity<?> getArticles(QuerySearchCommand command, String title, String author)
-			throws ExecuteSQLException {
+			throws ExecuteSQLException, InvalidDateFormatException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (!title.isEmpty()) {
+		if (!StringUtils.isEmpty(title)) {
 			searchParams.put(
 					ARTICLE_TITLE_KEY,
 					QueryCondition.builder().value(title).operation(LIKE_OPERATOR).build());
 		}
 
-		if (!author.isEmpty()) {
+		if (!StringUtils.isEmpty(author)) {
 			searchParams.put(
 					ARTICLE_AUTHOR_KEY,
 					QueryCondition.builder().value(author).operation(LIKE_OPERATOR).build());
@@ -77,7 +79,7 @@ public class ArticleService {
 
 		result.put(DATA_KEY, articles.stream().map(ArticleDto::new).collect(Collectors.toList()));
 
-		return null;
+		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
 	}
 
 	public ResponseEntity<?> deleteArticle(Long id) {

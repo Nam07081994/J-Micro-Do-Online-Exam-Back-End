@@ -2,7 +2,7 @@ package com.example.demo.repository;
 
 import static com.example.demo.constant.StringConstant.*;
 
-import com.example.demo.common.QueryCondition;
+import com.example.demo.common.query.QueryCondition;
 import com.example.demo.constant.StringConstant;
 import com.example.demo.exceptions.ExecuteSQLException;
 import jakarta.persistence.EntityManager;
@@ -37,7 +37,7 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 				queryCount.append(WHERE_STATEMENT);
 				String search =
 						searchParams.keySet().stream()
-								.map(s -> "c." + s + EMPTY_STRING + searchParams.get(s).getOperation() + " :" + s)
+								.map(s -> "c." + s + SPACE_STRING + searchParams.get(s).getOperation() + " :" + s)
 								.collect(Collectors.joining(AND_STATEMENT));
 				query.append(search);
 				queryCount.append(search);

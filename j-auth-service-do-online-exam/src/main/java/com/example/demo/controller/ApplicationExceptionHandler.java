@@ -5,6 +5,7 @@ import static com.example.demo.constant.TranslationCodeConstant.*;
 import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.constant.StringConstant;
 import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.service.TranslationService;
 import java.io.FileNotFoundException;
 import java.util.HashMap;
@@ -35,6 +36,12 @@ public class ApplicationExceptionHandler {
 	public ResponseEntity<?> handleExecuteSQLException() {
 		return GenerateResponseHelper.generateMessageResponse(
 				HttpStatus.BAD_REQUEST, translationService.getTranslation(EXECUTE_SQL_ERROR));
+	}
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(InvalidDateFormatException.class)
+	public ResponseEntity<?> handleInvalidDateFormatException(InvalidDateFormatException ex) {
+		return GenerateResponseHelper.generateMessageResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
 	}
 
 	@ResponseStatus(HttpStatus.BAD_REQUEST)

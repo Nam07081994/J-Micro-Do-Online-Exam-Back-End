@@ -34,6 +34,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -85,7 +86,7 @@ public class ExamService {
 		Map<String, QueryCondition> orParams = new HashMap<>();
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (token.isEmpty()) {
+		if (StringUtils.isEmpty(token)) {
 			searchParams.put(
 					EXAM_IS_PRIVATE_SEARCH_KEY,
 					QueryCondition.builder().value(EXAM_PUBLIC_FLAG).operation(EQUAL_OPERATOR).build());
@@ -104,14 +105,14 @@ public class ExamService {
 			}
 		}
 
-		if (!name.isEmpty()) {
+		if (!StringUtils.isEmpty(name)) {
 			searchParams.put(
 					EXAM_NAME_SEARCH_KEY,
 					QueryCondition.builder().value(name).operation(LIKE_OPERATOR).build());
 		}
 
-		if (!category_ids.isEmpty()) {
-			String[] arrCategoryIDs = category_ids.split(",");
+		if (!StringUtils.isEmpty(category_ids)) {
+			String[] arrCategoryIDs = category_ids.split(COMMA_STRING_CHARACTER);
 			var categoryIDs = Arrays.asList(arrCategoryIDs);
 			searchParams.put(
 					EXAM_CATEGORY_SEARCH_KEY,
@@ -195,10 +196,13 @@ public class ExamService {
 		if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
 			exam.setIsPrivate(EXAM_PRIVATE_FLAG);
 			try {
+				// TODO: add rule upload contest
 				HttpHeaders headers = new HttpHeaders();
 				headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token);
 				HttpEntity<Object> entity = new HttpEntity<>(headers);
-				UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(CHECK_USER_UPLOAD_URI);
+				UriComponentsBuilder builder =
+						UriComponentsBuilder.fromUriString(CHECK_USER_UPLOAD_URI)
+								.queryParam("flag", CREATE_EXAM_FLAG);
 				String url = builder.toUriString();
 				ResponseEntity<String> resp =
 						restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
@@ -715,6 +719,7 @@ public class ExamService {
 
 	public ResponseEntity<?> editExam(String token, EditExamCommand command)
 			throws JsonProcessingException {
+		// TODO: finish logic create exam
 		var examOpt = examRepository.findById(command.getId());
 		if (examOpt.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(

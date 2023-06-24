@@ -1,4 +1,4 @@
-package com.example.demo.common;
+package com.example.demo.common.query;
 
 import com.example.demo.constant.StringConstant;
 

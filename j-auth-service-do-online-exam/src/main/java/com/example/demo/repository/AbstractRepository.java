@@ -1,6 +1,6 @@
 package com.example.demo.repository;
 
-import com.example.demo.common.QueryCondition;
+import com.example.demo.common.query.QueryCondition;
 import com.example.demo.exceptions.ExecuteSQLException;
 import java.util.Map;
 

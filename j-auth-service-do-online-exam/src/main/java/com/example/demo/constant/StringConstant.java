@@ -2,6 +2,14 @@ package com.example.demo.constant;
 
 public class StringConstant {
 
+	//
+	public static final Integer EXAM_UPLOAD_KEY = 1;
+
+	public static final Integer CONTEST_UPLOAD_KEY = 2;
+
+	//
+	public static final String USERNAME_TOKEN_KEY = "username";
+
 	public static final String DATA_KEY = "data";
 
 	public static final String VALIDATE_KEY = "validate";
@@ -17,6 +25,8 @@ public class StringConstant {
 	public static final String FILE_TYPE_KEY = "fileType";
 
 	public static final String FILE_KEY = "file";
+
+	public static final String OLD_IMAGE_PATH_KEY = "oldImagePath";
 
 	public static final String PAGINATION_KEY = "pagination";
 
@@ -56,6 +66,8 @@ public class StringConstant {
 
 	public static final String EMPTY_STRING = "";
 
+	public static final String SPACE_STRING = " ";
+
 	// SQL string constants
 	public static final String AND_STATEMENT = " AND ";
 
@@ -75,30 +87,31 @@ public class StringConstant {
 
 	public static final String EMAIL_SUBJECT = "DO-ONLINE CONTEST INFORMATION";
 
-	public static final String EMAIL_BODY = "<html>"
-			+ "<body>"
-			+ "<p>Dear %s,</p>"
-			+ "<p>You successfully submitted your contest. Each time you submit a contest, you receive a unique login information. You can view your information below.</p>"
-			+ "<h3>Account Contest details:</h3>"
-			+ "<ul>"
-			+ "<li>Contest ID: %s</li>"
-			+ "<li>User name: %s</li>"
-			+ "<li>Password: %s</li>"
-			+ "<li>Link login: <a href=\"%s\">%s</a></li>"
-			+ "</ul>"
-			+ "<h3>Note:</h3>"
-			+ "<ol>"
-			+ "<li>Please log in on time for the contest. If you log in after the test starts or after the test ends, your test will not be recorded.</li>"
-			+ "<ul>"
-			+ "<li>Contest start time: %s</li>"
-			+ "<li>Contest end time: %s</li>"
-			+ "</ul>"
-			+ "<li>If you quit midway through the contest, you cannot enter the contest again.</li>"
-			+ "</ol>"
-			+ "<p>Good luck with the contest!</p>"
-			+ "<p>DO-ONLINE</p>"
-			+ "</body>"
-			+ "</html>";
+	public static final String EMAIL_BODY =
+			"<html>"
+					+ "<body>"
+					+ "<p>Dear %s,</p>"
+					+ "<p>You successfully submitted your contest. Each time you submit a contest, you receive a unique login information. You can view your information below.</p>"
+					+ "<h3>Account Contest details:</h3>"
+					+ "<ul>"
+					+ "<li>Contest ID: %s</li>"
+					+ "<li>User name: %s</li>"
+					+ "<li>Password: %s</li>"
+					+ "<li>Link login: <a href=\"%s\">%s</a></li>"
+					+ "</ul>"
+					+ "<h3>Note:</h3>"
+					+ "<ol>"
+					+ "<li>Please log in on time for the contest. If you log in after the test starts or after the test ends, your test will not be recorded.</li>"
+					+ "<ul>"
+					+ "<li>Contest start time: %s</li>"
+					+ "<li>Contest end time: %s</li>"
+					+ "</ul>"
+					+ "<li>If you quit midway through the contest, you cannot enter the contest again.</li>"
+					+ "</ol>"
+					+ "<p>Good luck with the contest!</p>"
+					+ "<p>DO-ONLINE</p>"
+					+ "</body>"
+					+ "</html>";
 
 	public static final String LOGIN_CONTEST_LINK = "abc.com";
 

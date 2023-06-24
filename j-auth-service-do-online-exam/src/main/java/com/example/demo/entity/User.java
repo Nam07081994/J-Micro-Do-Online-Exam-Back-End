@@ -2,6 +2,7 @@ package com.example.demo.entity;
 
 import com.example.demo.Enum.AuthenticationType;
 import com.example.demo.extra.ListLongJsonType;
+import com.example.demo.extra.MapJsonType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -14,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -48,8 +50,9 @@ public class User {
 	@Column(name = "password")
 	private String password;
 
-	@Column(name = "upload_number")
-	private int uploadNumber;
+	@Type(MapJsonType.class)
+	@Column(name = "upload_number", columnDefinition = "jsonb")
+	private Map<Integer, Integer> uploadNumber;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "auth_type")

@@ -5,6 +5,7 @@ import com.example.article.jarticleservicedoonlineexam.command.QuerySearchComman
 import com.example.article.jarticleservicedoonlineexam.command.UpdateArticleThumbnailCommand;
 import com.example.article.jarticleservicedoonlineexam.command.UpdateInfoArticleCommand;
 import com.example.article.jarticleservicedoonlineexam.exceptions.ExecuteSQLException;
+import com.example.article.jarticleservicedoonlineexam.exceptions.InvalidDateFormatException;
 import com.example.article.jarticleservicedoonlineexam.service.ArticleService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -28,7 +29,7 @@ public class ArticlesController {
 			@RequestParam(name = "page_size", defaultValue = "10") int page_size,
 			@RequestParam(name = "page_index", defaultValue = "-1") int page_index,
 			@RequestParam(name = "order_by", defaultValue = "-1") int order_by)
-			throws ExecuteSQLException {
+			throws ExecuteSQLException, InvalidDateFormatException {
 
 		return articleService.getArticles(
 				QuerySearchCommand.from(from_date, to_date, page_index, page_size, order_by),

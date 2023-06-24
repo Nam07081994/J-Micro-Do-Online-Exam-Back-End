@@ -44,4 +44,10 @@ public class ApplicationExceptionHandler {
 		return GenerateResponseHelper.generateMessageResponse(
 				HttpStatus.BAD_REQUEST, translationService.getTranslation(EXECUTE_SQL_ERROR));
 	}
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(InvalidDateFormatException.class)
+	public ResponseEntity<?> handleInvalidDateFormatException(InvalidDateFormatException ex) {
+		return GenerateResponseHelper.generateMessageResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+	}
 }

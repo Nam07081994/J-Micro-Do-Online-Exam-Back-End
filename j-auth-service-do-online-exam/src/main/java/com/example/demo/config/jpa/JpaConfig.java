@@ -7,8 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.auditing.DateTimeProvider;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 @Configuration
 @EnableJpaAuditing(
@@ -33,14 +31,9 @@ public class JpaConfig {
 	@Bean(name = "auditorProvider")
 	public AuditorAware<String> auditorAware() {
 		return () -> {
-			// TODO: Đoạn này đang sai logic cần fix lại sau
-			Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 			String username = REGISTERED_USER.get();
-			if (!authentication.isAuthenticated() & username != null) {
-				return Optional.of(username);
-			}
-			removeRegisteredUser();
-			return Optional.of(authentication.getName());
+
+			return Optional.of(username);
 		};
 	}
 }

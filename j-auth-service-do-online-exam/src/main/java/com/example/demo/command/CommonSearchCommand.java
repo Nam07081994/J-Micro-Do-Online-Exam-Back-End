@@ -1,7 +1,7 @@
 package com.example.demo.command;
 
-import com.example.demo.common.OrderByCondition;
 import com.example.demo.common.annotations.DateFormatCheck;
+import com.example.demo.common.query.OrderByCondition;
 import lombok.*;
 
 @Setter

@@ -6,15 +6,17 @@ import static com.example.demo.constant.TranslationCodeConstant.*;
 import com.example.demo.command.CommonSearchCommand;
 import com.example.demo.command.LoginCommand;
 import com.example.demo.command.RegisterCommand;
-import com.example.demo.common.QueryCondition;
-import com.example.demo.common.QueryDateCondition;
+import com.example.demo.command.UpdateUserInfoCommand;
 import com.example.demo.common.jwt.JwtTokenUtil;
+import com.example.demo.common.query.QueryCondition;
+import com.example.demo.common.query.QueryDateCondition;
 import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.config.jpa.JpaConfig;
 import com.example.demo.constant.StringConstant;
 import com.example.demo.dto.UserDto;
 import com.example.demo.entity.User;
 import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.repository.AbstractRepositoryImpl;
 import com.example.demo.repository.EndPointRepository;
 import com.example.demo.repository.RoleRepository;
@@ -22,6 +24,7 @@ import com.example.demo.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -45,6 +48,12 @@ public class AuthenticationService {
 	@Value("${app.file-service-endpoint}")
 	private String UPDATE_THUMBNAIL_URI;
 
+	@Value("${app.upload-rule.user.contest}")
+	private Integer A_NUMBER_UPLOAD_CONTEST;
+
+	@Value("${app.upload-rule.user.exam}")
+	private Integer A_NUMBER_UPLOAD_EXAM;
+
 	@Autowired private UserRepository userRepository;
 
 	@Autowired private RoleRepository roleRepository;
@@ -62,15 +71,15 @@ public class AuthenticationService {
 	@Autowired private AbstractRepositoryImpl<User> abstractRepository;
 
 	public ResponseEntity<?> getUsers(CommonSearchCommand command, String email, String username)
-			throws ExecuteSQLException {
+			throws ExecuteSQLException, InvalidDateFormatException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (!email.isEmpty()) {
+		if (!StringUtils.isEmpty(email)) {
 			searchParams.put(
 					EMAIL_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(email).build());
 		}
 
-		if (!username.isEmpty()) {
+		if (!StringUtils.isEmpty(username)) {
 			searchParams.put(
 					USERNAME_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(username).build());
 		}
@@ -116,11 +125,15 @@ public class AuthenticationService {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_ROLE_USER));
 		}
-		//TODO: add user limit upload number
+
+		Map<Integer, Integer> uploadNumber =
+				Map.of(EXAM_UPLOAD_KEY, A_NUMBER_UPLOAD_EXAM, CONTEST_UPLOAD_KEY, A_NUMBER_UPLOAD_CONTEST);
+
 		var user =
 				User.builder()
 						.userName(command.getUserName())
 						.email(command.getEmail())
+						.uploadNumber(uploadNumber)
 						.thumbnail(DEFAULT_USER_THUMBNAIL_URI)
 						.password(passwordEncoder.encode(command.getPassword()))
 						.roles(List.of(roleUser.get().getId()))
@@ -147,7 +160,8 @@ public class AuthenticationService {
 					HttpStatus.OK,
 					Map.of(
 							StringConstant.ACCESS_TOKEN_KEY,
-							JwtTokenUtil.generateToken(command.getEmail(), roleResult, userID)));
+							JwtTokenUtil.generateToken(
+									userOpt.get().getUserName(), command.getEmail(), roleResult, userID)));
 		}
 
 		return GenerateResponseHelper.generateMessageResponse(
@@ -170,6 +184,7 @@ public class AuthenticationService {
 		return endPoints;
 	}
 
+	// TODO: need test
 	public ResponseEntity<?> updateUserThumbnail(String token, MultipartFile file) {
 		try {
 			String email = (String) JwtTokenUtil.getUserInfoFromToken(token, Claims::getId);
@@ -184,7 +199,7 @@ public class AuthenticationService {
 			headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 			MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
 			body.add(StringConstant.DOMAIN_KEY, StringConstant.USER_DOMAIN_NAME);
-			body.add(StringConstant.FILE_TYPE_KEY, StringConstant.IMAGE_FOLDER_TYPE);
+			body.add(StringConstant.OLD_IMAGE_PATH_KEY, userOptional.get().getThumbnail());
 			ByteArrayResource contentsAsResource =
 					new ByteArrayResource(file.getBytes()) {
 						@Override
@@ -230,7 +245,7 @@ public class AuthenticationService {
 	}
 
 	public ResponseEntity<?> refreshToken(String token) {
-		var tokenExpired = JwtTokenUtil.isTokenExpired(token);
+		var tokenExpired = JwtTokenUtil.isTokenExpired(token.substring(7));
 		if (!tokenExpired) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(INVALID_TOKEN_INFORMATION));
@@ -247,7 +262,9 @@ public class AuthenticationService {
 
 		return GenerateResponseHelper.generateDataResponse(
 				HttpStatus.OK,
-				Map.of(REFRESH_TOKEN_KEY, JwtTokenUtil.generateToken(email, roleResult, userID)));
+				Map.of(
+						REFRESH_TOKEN_KEY,
+						JwtTokenUtil.generateToken(userRoles.get().getUserName(), email, roleResult, userID)));
 	}
 
 	private String getUserRolesString(List<Long> roleIDs) {
@@ -259,5 +276,51 @@ public class AuthenticationService {
 		}
 
 		return roles.substring(0, roles.length() - 1);
+	}
+
+	// TODO: need test
+	public ResponseEntity<?> checkUserAction(String token, int flag) {
+		Long userID = (Long) JwtTokenUtil.getUserInfoFromToken(token, Claims::getAudience);
+		Optional<User> userOpt = userRepository.findById(userID);
+		if (userOpt.isEmpty()) {
+			return ResponseEntity.badRequest().build();
+		}
+
+		Map<Integer, Integer> userUploadNumber = userOpt.get().getUploadNumber();
+		if (userUploadNumber.get(flag) <= 0) {
+			return ResponseEntity.badRequest().build();
+		}
+
+		var newValue = userUploadNumber.get(flag) - 1;
+		userUploadNumber.put(flag, newValue);
+		userOpt.get().setUploadNumber(userUploadNumber);
+		userRepository.save(userOpt.get());
+
+		return ResponseEntity.ok().build();
+	}
+
+	// TODO: need test
+	public ResponseEntity<?> updateUserInfo(String token, UpdateUserInfoCommand command) {
+		// TODO: add more user field ex: birthday, phone, address ...
+		Long userID = (Long) JwtTokenUtil.getUserInfoFromToken(token, Claims::getAudience);
+		Optional<User> userOpt = userRepository.findById(userID);
+		Optional<User> userOptByEmail = userRepository.findByEmail(command.getEmail());
+		if (userOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_USER_INFORMATION));
+		}
+
+		if (!userOpt.get().getEmail().equals(command.getEmail()) && userOptByEmail.isPresent()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_EMAIL_EXIST));
+		}
+
+		userOpt.get().setUserName(command.getUserName());
+		userOpt.get().setEmail(command.getEmail());
+
+		userRepository.save(userOpt.get());
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(UPDATE_USER_INFO_SUCCESS));
 	}
 }

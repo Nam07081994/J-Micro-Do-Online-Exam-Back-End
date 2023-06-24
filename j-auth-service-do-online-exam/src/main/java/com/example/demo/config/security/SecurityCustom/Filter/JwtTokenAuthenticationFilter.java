@@ -1,6 +1,9 @@
 package com.example.demo.config.security.SecurityCustom.Filter;
 
+import static com.example.demo.constant.StringConstant.USERNAME_TOKEN_KEY;
+
 import com.example.demo.common.jwt.JwtTokenUtil;
+import com.example.demo.config.jpa.JpaConfig;
 import io.jsonwebtoken.io.IOException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,6 +23,7 @@ public class JwtTokenAuthenticationFilter extends OncePerRequestFilter {
 
 		if (token != null && JwtTokenUtil.validateToken(token)) {
 			Authentication auth = JwtTokenUtil.getAuthenticationFromToken(token);
+			JpaConfig.setRegisteredUser(JwtTokenUtil.getUserInfoFromToken1(token, USERNAME_TOKEN_KEY));
 			SecurityContextHolder.getContext().setAuthentication(auth);
 		}
 

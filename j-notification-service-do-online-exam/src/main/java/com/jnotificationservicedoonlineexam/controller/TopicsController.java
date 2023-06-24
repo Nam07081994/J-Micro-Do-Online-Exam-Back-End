@@ -5,6 +5,7 @@ import com.jnotificationservicedoonlineexam.command.CreateTopicRequest;
 import com.jnotificationservicedoonlineexam.command.QuerySearchCommand;
 import com.jnotificationservicedoonlineexam.command.SubscribeTopicRequest;
 import com.jnotificationservicedoonlineexam.exceptions.ExecuteSQLException;
+import com.jnotificationservicedoonlineexam.exceptions.InvalidDateFormatException;
 import com.jnotificationservicedoonlineexam.service.TopicService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +26,7 @@ public class TopicsController {
 			@RequestParam(name = "page_size", defaultValue = "10") int page_size,
 			@RequestParam(name = "page_index", defaultValue = "-1") int page_index,
 			@RequestParam(name = "order_by", defaultValue = "-1") int order_by)
-			throws ExecuteSQLException {
+			throws ExecuteSQLException, InvalidDateFormatException {
 
 		return topicService.getTopics(
 				QuerySearchCommand.from(from_date, to_date, page_index, page_size, order_by), name);

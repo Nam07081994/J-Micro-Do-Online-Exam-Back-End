@@ -17,6 +17,7 @@ import com.jnotificationservicedoonlineexam.common.response.GenerateResponseHelp
 import com.jnotificationservicedoonlineexam.dto.TopicDto;
 import com.jnotificationservicedoonlineexam.entity.Topic;
 import com.jnotificationservicedoonlineexam.exceptions.ExecuteSQLException;
+import com.jnotificationservicedoonlineexam.exceptions.InvalidDateFormatException;
 import com.jnotificationservicedoonlineexam.repository.TopicRepository;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -39,10 +41,10 @@ public class TopicService {
 	private TranslationService translationService;
 
 	public ResponseEntity<?> getTopics(QuerySearchCommand command, String name)
-			throws ExecuteSQLException {
+			throws ExecuteSQLException, InvalidDateFormatException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (!name.isEmpty()) {
+		if (!StringUtils.isEmpty(name)) {
 			searchParams.put(
 					TOPIC_NAME_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(name).build());
 		}
