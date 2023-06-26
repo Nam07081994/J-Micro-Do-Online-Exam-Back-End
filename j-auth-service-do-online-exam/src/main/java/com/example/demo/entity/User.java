@@ -47,8 +47,18 @@ public class User {
 	@Column(name = "email", nullable = false)
 	private String email;
 
+	private String phone;
+
+	private String birthday;
+
+	private String address;
+
 	@Column(name = "password")
 	private String password;
+
+	@Type(ListLongJsonType.class)
+	@Column(columnDefinition = "jsonb")
+	private List<Long> roles;
 
 	@Type(MapJsonType.class)
 	@Column(name = "upload_number", columnDefinition = "jsonb")
@@ -78,8 +88,4 @@ public class User {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
 	@LastModifiedDate
 	private LocalDateTime updatedAt;
-
-	@Type(ListLongJsonType.class)
-	@Column(columnDefinition = "jsonb")
-	private List<Long> roles;
 }

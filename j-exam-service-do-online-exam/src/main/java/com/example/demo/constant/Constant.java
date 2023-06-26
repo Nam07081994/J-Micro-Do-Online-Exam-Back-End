@@ -15,6 +15,8 @@ public class Constant {
 
 	public static final String IMAGE_FOLDER_TYPE = "images/";
 
+	public static final String OLD_IMAGE_PATH_KEY = "oldImagePath";
+
 	//
 	public static final String EXAM_DOMAIN_NAME = "exams";
 

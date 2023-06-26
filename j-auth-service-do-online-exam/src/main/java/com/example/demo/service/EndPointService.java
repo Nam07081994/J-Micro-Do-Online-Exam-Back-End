@@ -10,10 +10,12 @@ import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.constant.StringConstant;
 import com.example.demo.dto.EndpointOptionDto;
 import com.example.demo.entity.EndPoint;
+import com.example.demo.entity.Role;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.repository.AbstractRepositoryImpl;
 import com.example.demo.repository.EndPointRepository;
+import com.example.demo.repository.RoleRepository;
 import java.util.*;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -25,11 +27,13 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class EndPointService {
 
-	private AbstractRepositoryImpl<EndPoint> abstractRepository;
+	private RoleRepository roleRepository;
 
 	private EndPointRepository endPointRepository;
 
 	private TranslationService translationService;
+
+	private AbstractRepositoryImpl<EndPoint> abstractRepository;
 
 	public ResponseEntity<?> endPointService(CommonSearchCommand command, String name)
 			throws ExecuteSQLException, InvalidDateFormatException {
@@ -106,6 +110,15 @@ public class EndPointService {
 	}
 
 	public ResponseEntity<?> deleteEndPoint(Long id) {
+		// TODO: need test
+		List<Role> roles = roleRepository.findAll();
+		roles.forEach(
+				r -> {
+					List<Long> listEndpoint = r.getEndPoint();
+					listEndpoint.remove(id);
+					r.setEndPoint(listEndpoint);
+					roleRepository.save(r);
+				});
 		Optional<EndPoint> endPointOptionalByID = endPointRepository.findById(id);
 		if (endPointOptionalByID.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(

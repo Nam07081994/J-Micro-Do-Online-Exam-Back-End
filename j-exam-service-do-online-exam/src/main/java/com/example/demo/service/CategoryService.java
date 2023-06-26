@@ -1,6 +1,6 @@
 package com.example.demo.service;
 
-import static com.example.demo.constant.Constant.DATA_KEY;
+import static com.example.demo.constant.Constant.*;
 import static com.example.demo.constant.SQLConstants.CATEGORY_NAME_KEY;
 import static com.example.demo.constant.SQLConstants.LIKE_OPERATOR;
 import static com.example.demo.constant.TranslationCodeConstants.*;
@@ -15,29 +15,44 @@ import com.example.demo.dto.category.CategoryDto;
 import com.example.demo.dto.category.CategoryOptionDto;
 import com.example.demo.entity.Category;
 import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.repository.CategoryRepository;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
 @Service
-@AllArgsConstructor
 public class CategoryService {
-	private CategoryRepository categoryRepository;
 
-	private TranslationService translationService;
+	@Value("${app.url.upload-img-endpoint}")
+	private String UPLOAD_IMAGE_URI;
+
+	@Value("${app.url.update-img-endpoint}")
+	private String UPDATE_IMAGE_URI;
+
+	@Autowired private RestTemplate restTemplate;
+
+	@Autowired private CategoryRepository categoryRepository;
+
+	@Autowired private TranslationService translationService;
 
 	public ResponseEntity<?> getAllCategories(QuerySearchCommand command, String name)
-			throws ExecuteSQLException {
+			throws ExecuteSQLException, InvalidDateFormatException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (!name.isEmpty()) {
+		if (!StringUtils.isEmpty(name)) {
 			searchParams.put(
 					CATEGORY_NAME_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(name).build());
 		}
@@ -82,37 +97,58 @@ public class CategoryService {
 		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, categories));
 	}
 
-	public ResponseEntity<?> createCategory(CreateCategoryCommand command) {
+	public ResponseEntity<?> createCategory(CreateCategoryCommand command) throws IOException {
 		var categoryCheck = categoryRepository.findByCategoryName(command.getCategoryName());
 		if (categoryCheck.isPresent()) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(CATEGORY_NAME_EXISTED));
 		}
 
-		var category = Category.builder().categoryName(command.getCategoryName()).build();
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+		MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+		body.add(DOMAIN_KEY, CATEGORY_DOMAIN_NAME);
+		body.add(FILE_TYPE_KEY, IMAGE_FOLDER_TYPE);
+		ByteArrayResource contentsAsResource =
+				new ByteArrayResource(command.getImage().getBytes()) {
+					@Override
+					public String getFilename() {
+						return command.getImage().getOriginalFilename();
+					}
+				};
+		body.add(FILE_KEY, contentsAsResource);
+		HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+		ResponseEntity<String> response =
+				restTemplate.exchange(UPLOAD_IMAGE_URI, HttpMethod.POST, requestEntity, String.class);
+
+		var category =
+				Category.builder()
+						.categoryName(command.getCategoryName())
+						.thumbnail(response.getBody())
+						.build();
 		categoryRepository.save(category);
 
 		return GenerateResponseHelper.generateMessageResponse(
 				HttpStatus.OK, translationService.getTranslation(SAVE_CATEGORY_INFORMATION_SUCCESS));
 	}
 
-	public ResponseEntity<?> updateCategory(UpdateCategoryCommand command) {
-		var categoryCheck = categoryRepository.findById(command.getCategoryId());
+	public ResponseEntity<?> updateCategoryInfo(Long id, String name) {
+		var categoryCheck = categoryRepository.findById(id);
 		if (categoryCheck.isPresent()) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST,
 					translationService.getTranslation(NOT_FOUND_CATEGORY_INFORMATION));
 		}
 		var category = categoryCheck.get();
-		if (!category.getCategoryName().equals(command.getCategoryName())) {
-			Optional<Category> cateOpt = categoryRepository.findByCategoryName(command.getCategoryName());
+		if (!category.getCategoryName().equals(name)) {
+			Optional<Category> cateOpt = categoryRepository.findByCategoryName(name);
 			if (cateOpt.isPresent()) {
 				return GenerateResponseHelper.generateMessageResponse(
 						HttpStatus.BAD_REQUEST, translationService.getTranslation(CATEGORY_NAME_EXISTED));
 			}
 		}
 
-		category.setCategoryName(command.getCategoryName());
+		category.setCategoryName(name);
 		categoryRepository.save(category);
 
 		return GenerateResponseHelper.generateMessageResponse(
@@ -132,5 +168,39 @@ public class CategoryService {
 
 		return GenerateResponseHelper.generateMessageResponse(
 				HttpStatus.OK, translationService.getTranslation(DELETE_CATEGORY_INFORMATION_SUCCESS));
+	}
+
+	public ResponseEntity<?> updateCategoryThumbnail(UpdateCategoryCommand command) {
+		var categoryCheck = categoryRepository.findById(command.getCategoryId());
+		if (categoryCheck.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST,
+					translationService.getTranslation(NOT_FOUND_CATEGORY_INFORMATION));
+		}
+		try {
+			HttpHeaders headers = new HttpHeaders();
+			headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+			MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+			body.add(DOMAIN_KEY, CATEGORY_DOMAIN_NAME);
+			body.add(OLD_IMAGE_PATH_KEY, categoryCheck.get().getThumbnail());
+			ByteArrayResource contentsAsResource =
+					new ByteArrayResource(command.getImage().getBytes()) {
+						@Override
+						public String getFilename() {
+							return command.getImage().getOriginalFilename();
+						}
+					};
+			body.add(FILE_KEY, contentsAsResource);
+			HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+			ResponseEntity<String> resp =
+					restTemplate.exchange(UPDATE_IMAGE_URI, HttpMethod.POST, requestEntity, String.class);
+			categoryCheck.get().setThumbnail(resp.getBody());
+			categoryRepository.save(categoryCheck.get());
+
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.OK, translationService.getTranslation(UPDATE_CATEGORY_THUMBNAIL_SUCCESS));
+		} catch (Exception ex) {
+			return null;
+		}
 	}
 }

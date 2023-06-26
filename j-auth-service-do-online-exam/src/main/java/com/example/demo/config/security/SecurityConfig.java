@@ -74,7 +74,7 @@ public class SecurityConfig {
 				//										.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
 				.authorizeHttpRequests()
 				.requestMatchers(
-						"/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/getEndPointsByRoles")
+						"/api/v1/auth/register", "/api/v1/auth/login", "/api/v1/auth/getEndPointsByRoles","")
 				.permitAll()
 				.anyRequest()
 				.authenticated()

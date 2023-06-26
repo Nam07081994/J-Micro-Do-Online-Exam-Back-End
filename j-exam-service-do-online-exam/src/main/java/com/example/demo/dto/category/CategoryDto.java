@@ -11,13 +11,15 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CategoryDto {
-	private String name;
 	private Long id;
+	private String name;
 	private String createdAt;
+	private String thumbnail;
 
 	public CategoryDto(Category category) {
-		this.name = category.getCategoryName();
 		this.id = category.getId();
+		this.name = category.getCategoryName();
+		this.thumbnail = category.getThumbnail();
 		this.createdAt = category.getCreatedAt().toString();
 	}
 }
