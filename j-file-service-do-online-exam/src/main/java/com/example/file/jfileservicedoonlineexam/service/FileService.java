@@ -23,6 +23,9 @@ public class FileService {
 	@Value("${application.resource-url}")
 	private String RESOURCE_URL_ROOT;
 
+	@Value("${application.user-default-thumbnail-name}")
+	private String DEFAULT_USER_THUMBNAIL_NAME;
+
 	public String saveFile(UploadRequest req) throws IOException {
 		Path staticPath = Paths.get(AllConstants.STATIC_FOLDER_PATH);
 		Path imagePath = Paths.get(req.getFileType() + req.getDomain());
@@ -69,9 +72,13 @@ public class FileService {
 	}
 
 	public String updateImage(UpdateImageRequest req) throws IOException {
-		//removeFile(req.getOldImagePath(), AllConstants.IMAGE_FOLDER_TYPE);
+		if (!req.getOldImagePath().contains(DEFAULT_USER_THUMBNAIL_NAME)) {
+			removeFile(req.getOldImagePath(), AllConstants.IMAGE_FOLDER_TYPE);
+		}
+
 		UploadRequest uploadRequest =
 				new UploadRequest(req.getDomain(), AllConstants.IMAGE_FOLDER_TYPE, req.getFile());
+
 		return saveFile(uploadRequest);
 	}
 

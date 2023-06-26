@@ -12,6 +12,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +34,9 @@ public class AuthenticationFilter
 	@Value("${app.url.getEndPoint}")
 	private String urlEndPoint;
 
+	@Value("${app.url.get-image-pattern}")
+	private String FETCH_IMAGE_ENDPOINT_PATTERN;
+
 	public AuthenticationFilter() {
 		super(Config.class);
 	}
@@ -45,8 +50,10 @@ public class AuthenticationFilter
 		return ((exchange, chain) -> {
 			ServerHttpResponse response = exchange.getResponse();
 			String endPoint = exchange.getRequest().getURI().getPath();
+			Pattern patternDate = Pattern.compile(FETCH_IMAGE_ENDPOINT_PATTERN);
+			Matcher matcher = patternDate.matcher(endPoint);
 			response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-			if (!getEndpointsByRole(PUBLIC_ROLE, EMPTY_STRING).contains(endPoint)) {
+			if (!matcher.matches() && !getEndpointsByRole(PUBLIC_ROLE, EMPTY_STRING).contains(endPoint)) {
 				if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
 					response.setStatusCode(HttpStatus.UNAUTHORIZED);
 					return response.writeWith(

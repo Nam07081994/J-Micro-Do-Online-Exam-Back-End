@@ -6,8 +6,8 @@ spring:
     name: notification-service
   datasource:
     url: jdbc:postgresql://localhost:5432/online-exam-db-2
-    username: root
-    password: 123456123
+    username: postgres
+    password: 12345
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

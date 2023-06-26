@@ -16,6 +16,9 @@ public class UserDto {
 	private String email;
 	private String username;
 	private String createAt;
+	private String phone;
+	private String address;
+	private String birthday;
 	private List<String> roles;
 
 	public UserDto(User user, List<String> roles) {
@@ -24,5 +27,8 @@ public class UserDto {
 		this.email = user.getEmail();
 		this.username = user.getUserName();
 		this.createAt = user.getCreatedAt().toString();
+		this.phone = user.getPhone();
+		this.address = user.getAddress();
+		this.birthday = user.getBirthday();
 	}
 }

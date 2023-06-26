@@ -1,5 +1,6 @@
 application:
   resource-url: http://localhost:8763/api/v1/files
+  user-default-thumbnail-name: default_user_thumbnail.jpg
 
 server:
   port: 8766

@@ -15,8 +15,6 @@ import lombok.Setter;
 public class CreateAccountsExamCommand {
 	private Long contestID;
 
-	private Long examID;
-
 	private Map<String, String> userInfo;
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")

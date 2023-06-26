@@ -149,8 +149,7 @@ public class AccountExamService {
 	}
 
 	public void removeAccountsExam() {
-		// TODO: specify condition for remove accounts-exam
-		accountExamRepository.deleteAll();
+		accountExamRepository.deleteByEndAtBefore(LocalDateTime.now());
 	}
 
 	private String generateUsernameAndPassword() {
@@ -204,10 +203,12 @@ public class AccountExamService {
 	private String formatDateTime(LocalDateTime inputDateTime) {
 		try {
 			DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("h:mm a 'on' MMMM d, yyyy");
+
 			return inputDateTime.format(inputFormatter);
 		} catch (DateTimeParseException e) {
 			e.printStackTrace();
-			return "";
+
+			return EMPTY_STRING;
 		}
 	}
 }

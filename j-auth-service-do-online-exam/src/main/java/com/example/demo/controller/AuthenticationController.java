@@ -42,6 +42,7 @@ public class AuthenticationController {
 	@GetMapping("/users")
 	public ResponseEntity<?> getUsers(
 			@RequestParam(name = "username", required = false) String username,
+			@RequestParam(name = "phone", required = false) String phone,
 			@RequestParam(name = "email", required = false) String email,
 			@RequestParam(name = "from_date", required = false) String from_date,
 			@RequestParam(name = "to_date", required = false) String to_date,
@@ -52,7 +53,8 @@ public class AuthenticationController {
 		return authenticationService.getUsers(
 				CommonSearchCommand.from(from_date, to_date, page_index, page_size, order_by),
 				email,
-				username);
+				username,
+				phone);
 	}
 
 	@GetMapping("/getEndPointsByRoles")

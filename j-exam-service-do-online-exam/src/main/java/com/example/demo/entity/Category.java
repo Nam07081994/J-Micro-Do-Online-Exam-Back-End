@@ -36,6 +36,8 @@ public class Category {
 	@Column(name = "category_name", nullable = false)
 	private String categoryName;
 
+	private String thumbnail;
+
 	@Column(name = "created_by")
 	@CreatedBy
 	private String createdBy;

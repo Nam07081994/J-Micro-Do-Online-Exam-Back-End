@@ -70,7 +70,8 @@ public class AuthenticationService {
 
 	@Autowired private AbstractRepositoryImpl<User> abstractRepository;
 
-	public ResponseEntity<?> getUsers(CommonSearchCommand command, String email, String username)
+	public ResponseEntity<?> getUsers(
+			CommonSearchCommand command, String email, String username, String phone)
 			throws ExecuteSQLException, InvalidDateFormatException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
@@ -82,6 +83,11 @@ public class AuthenticationService {
 		if (!StringUtils.isEmpty(username)) {
 			searchParams.put(
 					USERNAME_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(username).build());
+		}
+
+		if (!StringUtils.isEmpty(phone)) {
+			searchParams.put(
+					PHONE_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(phone).build());
 		}
 
 		if (QueryDateCondition.generate(command, searchParams))
@@ -184,7 +190,6 @@ public class AuthenticationService {
 		return endPoints;
 	}
 
-	// TODO: need test
 	public ResponseEntity<?> updateUserThumbnail(String token, MultipartFile file) {
 		try {
 			String email = (String) JwtTokenUtil.getUserInfoFromToken(token, Claims::getId);
@@ -278,7 +283,6 @@ public class AuthenticationService {
 		return roles.substring(0, roles.length() - 1);
 	}
 
-	// TODO: need test
 	public ResponseEntity<?> checkUserAction(String token, int flag) {
 		Long userID = (Long) JwtTokenUtil.getUserInfoFromToken(token, Claims::getAudience);
 		Optional<User> userOpt = userRepository.findById(userID);
@@ -299,9 +303,7 @@ public class AuthenticationService {
 		return ResponseEntity.ok().build();
 	}
 
-	// TODO: need test
 	public ResponseEntity<?> updateUserInfo(String token, UpdateUserInfoCommand command) {
-		// TODO: add more user field ex: birthday, phone, address ...
 		Long userID = (Long) JwtTokenUtil.getUserInfoFromToken(token, Claims::getAudience);
 		Optional<User> userOpt = userRepository.findById(userID);
 		Optional<User> userOptByEmail = userRepository.findByEmail(command.getEmail());
@@ -313,6 +315,18 @@ public class AuthenticationService {
 		if (!userOpt.get().getEmail().equals(command.getEmail()) && userOptByEmail.isPresent()) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_EMAIL_EXIST));
+		}
+
+		if (!StringUtils.isEmpty(command.getBirthday())) {
+			userOpt.get().setBirthday(command.getBirthday());
+		}
+
+		if (!StringUtils.isEmpty(command.getPhone())) {
+			userOpt.get().setPhone(command.getPhone());
+		}
+
+		if (!StringUtils.isEmpty(command.getAddress())) {
+			userOpt.get().setAddress(command.getAddress());
 		}
 
 		userOpt.get().setUserName(command.getUserName());

@@ -40,6 +40,8 @@ public class StringConstant {
 
 	public static final String USERNAME_KEY = "userName";
 
+	public static final String PHONE_KEY = "phone";
+
 	public static final String CREATED_AT_KEY = "createdAt";
 
 	public static final String ROLE_NAME_KEY = "roleName";

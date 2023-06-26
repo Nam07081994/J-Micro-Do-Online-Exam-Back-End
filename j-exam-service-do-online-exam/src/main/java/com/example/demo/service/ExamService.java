@@ -20,6 +20,7 @@ import com.example.demo.entity.Contest;
 import com.example.demo.entity.Exam;
 import com.example.demo.entity.Question;
 import com.example.demo.exceptions.ExecuteSQLException;
+import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.repository.CategoryRepository;
 import com.example.demo.repository.ContestRepository;
 import com.example.demo.repository.ExamRepository;
@@ -81,7 +82,7 @@ public class ExamService {
 
 	public ResponseEntity<?> getAllExam(
 			QuerySearchCommand command, String token, String name, String category_ids, int duration)
-			throws JsonProcessingException, ExecuteSQLException {
+			throws JsonProcessingException, ExecuteSQLException, InvalidDateFormatException {
 		// TODO: handle logic get exam for normal_user or premium_user
 		Map<String, QueryCondition> orParams = new HashMap<>();
 		Map<String, QueryCondition> searchParams = new HashMap<>();
@@ -263,6 +264,7 @@ public class ExamService {
 				HttpStatus.OK, translationService.getTranslation(SAVE_EXAM_INFORMATION_SUCCESS));
 	}
 
+	// TODO: need test
 	public ResponseEntity<?> getExamByName(String token, String name, Boolean flag)
 			throws JsonProcessingException {
 		Optional<Exam> examOpt = examRepository.findExamByExamName(name);
@@ -271,12 +273,14 @@ public class ExamService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
 		}
 
-		Long ownerID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
-		if ((ownerID.compareTo(examOpt.get().getOwnerId()) != 0)
-				&& examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG) {
-			return GenerateResponseHelper.generateMessageResponse(
-					HttpStatus.BAD_REQUEST,
-					translationService.getTranslation(NOT_ALLOW_ACCESS_EXAM_INFORMATION));
+		if (!StringUtils.isEmpty(token)) {
+			Long ownerID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+			if ((ownerID.compareTo(examOpt.get().getOwnerId()) != 0)
+					&& examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST,
+						translationService.getTranslation(NOT_ALLOW_ACCESS_EXAM_INFORMATION));
+			}
 		}
 
 		var categoryName =

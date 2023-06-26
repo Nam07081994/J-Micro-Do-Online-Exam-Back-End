@@ -50,12 +50,7 @@ public class Contest {
 
 	private Long examId;
 
-	@Column(name = "examinee_number", nullable = false)
-	private Long examineeNumber;
-
-	@Type(ListLongJsonType.class)
-	@Column(columnDefinition = "jsonb")
-	private List<Long> examineeId;
+	//stt username email -> save jsonb {username email}
 
 	@Column(name = "created_by")
 	@CreatedBy

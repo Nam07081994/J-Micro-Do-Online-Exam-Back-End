@@ -1,18 +1,16 @@
 package com.example.demo.command.category;
 
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
+import com.example.demo.common.anotations.MultipleFileExtension;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class UpdateCategoryCommand {
-	@Min(value = 1)
 	private Long categoryId;
 
-	@NotEmpty(message = "Category name is mandatory")
-	private String categoryName;
+	@MultipleFileExtension private MultipartFile image;
 }

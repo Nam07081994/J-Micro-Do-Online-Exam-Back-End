@@ -16,6 +16,8 @@ public class TranslationCodeConstants {
 
 	public static final String DELETE_CATEGORY_INFORMATION_SUCCESS = "delete-success-category";
 
+	public static final String UPDATE_CATEGORY_THUMBNAIL_SUCCESS = "update-category-thumbnail";
+
 	// exam message code
 	public static final String SAVE_EXAM_INFORMATION_SUCCESS = "save-success-exam";
 

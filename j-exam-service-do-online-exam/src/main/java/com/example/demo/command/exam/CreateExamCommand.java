@@ -1,5 +1,6 @@
 package com.example.demo.command.exam;
 
+import com.example.demo.common.anotations.MultipleFileExtension;
 import com.example.demo.dto.question.QuestionDto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
@@ -27,7 +28,7 @@ public class CreateExamCommand {
 	@NotEmpty(message = "Exam description is mandatory")
 	private String description;
 
-	private MultipartFile file;
+	@MultipleFileExtension private MultipartFile file;
 
 	private List<QuestionDto> questions;
 }

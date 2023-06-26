@@ -10,6 +10,8 @@ public class QueryOrderByCondition {
 			case 2 -> ORDER_STATEMENT + "title" + " DESC ";
 			case 3 -> ORDER_STATEMENT + "createdAt" + " ASC ";
 			case 4 -> ORDER_STATEMENT + "createdAt" + " DESC ";
+			case 5 -> ORDER_STATEMENT + "author" + " ASC ";
+			case 6 -> ORDER_STATEMENT + "author" + " DESC ";
 			default -> EMPTY_STRING;
 		};
 	}
