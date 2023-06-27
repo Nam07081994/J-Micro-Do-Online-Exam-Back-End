@@ -8,6 +8,8 @@ import com.example.demo.exceptions.ExecuteSQLException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -38,7 +40,7 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 				queryCount.append(WHERE_STATEMENT);
 				String search =
 						searchParams.keySet().stream()
-								.map(s -> "c." + s + EMPTY_STRING + searchParams.get(s).getOperation() + " :" + s)
+								.map(s -> "c." + s + SPACE_STRING + searchParams.get(s).getOperation() + " :" + s)
 								.collect(Collectors.joining(AND_STATEMENT));
 				query.append(search);
 				queryCount.append(search);
@@ -77,8 +79,8 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 			var total = records.getSingleResult();
 			int totalPages = (int) Math.ceil(total / (double) pageSize);
 
-			return Map.of(
-					DATA_KEY, results, PAGINATION_KEY, Map.of(PAGES_KEY, totalPages, PAGE_INDEX, pageIndex));
+			return new HashMap<>(Map.of(
+					DATA_KEY, results, PAGINATION_KEY, Map.of(PAGES_KEY, totalPages, PAGE_INDEX, pageIndex)));
 		} catch (Exception ex) {
 			// TODO: add sql error
 			throw new ExecuteSQLException(ex.getMessage(), "");

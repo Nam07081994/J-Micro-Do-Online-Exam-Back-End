@@ -25,6 +25,8 @@ public class Constant {
 	// string constants
 	public static final String EMPTY_STRING = "";
 
+	public static final String SPACE_STRING = " ";
+
 	public static final String DOT_STRING_CHARACTER = ".";
 
 	public static final String COMMA_STRING_CHARACTER = ",";

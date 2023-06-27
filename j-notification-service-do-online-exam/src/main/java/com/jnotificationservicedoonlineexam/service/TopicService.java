@@ -86,7 +86,7 @@ public class TopicService {
 	public ResponseEntity<?> subscribeTopic(SubscribeTopicRequest req, String token)
 			throws JsonProcessingException {
 		Optional<Topic> topicOpt = topicRepository.findByTopicName(req.getTopicName());
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
 		if (topicOpt.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(
@@ -128,7 +128,7 @@ public class TopicService {
 	public ResponseEntity<?> unsubscribeTopic(SubscribeTopicRequest req, String token)
 			throws JsonProcessingException {
 		Optional<Topic> topicOpt = topicRepository.findByTopicName(req.getTopicName());
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
 		if (topicOpt.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(

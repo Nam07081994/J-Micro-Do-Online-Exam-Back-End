@@ -9,6 +9,8 @@ public class Constants {
 	// string constants
 	public static final String EMPTY_STRING = "";
 
+	public static final String SPACE_STRING = " ";
+
 	public static final String MESSAGE_KEY = "message";
 
 	// token constants

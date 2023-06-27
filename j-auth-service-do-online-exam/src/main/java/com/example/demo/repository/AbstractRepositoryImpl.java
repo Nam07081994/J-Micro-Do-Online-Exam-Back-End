@@ -8,6 +8,8 @@ import com.example.demo.exceptions.ExecuteSQLException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
+
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -63,11 +65,11 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 			var total = records.getSingleResult();
 			int totalPages = (int) Math.ceil(total / (double) pageSize);
 
-			return Map.of(
+			return new HashMap<>(Map.of(
 					StringConstant.DATA_KEY,
 					results,
 					StringConstant.PAGINATION_KEY,
-					Map.of(StringConstant.PAGES_KEY, totalPages, StringConstant.PAGE_INDEX, pageIndex));
+					Map.of(StringConstant.PAGES_KEY, totalPages, StringConstant.PAGE_INDEX, pageIndex)));
 		} catch (Exception ex) {
 			throw new ExecuteSQLException(ex.getMessage());
 		}

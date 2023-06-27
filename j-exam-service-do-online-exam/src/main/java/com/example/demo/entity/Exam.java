@@ -52,7 +52,7 @@ public class Exam {
 	private Long ownerId;
 
 	@Column(name = "is_private")
-	private Boolean isPrivate;
+	private Boolean isPrivate = false;
 
 	@Column(name = "created_by")
 	@CreatedBy

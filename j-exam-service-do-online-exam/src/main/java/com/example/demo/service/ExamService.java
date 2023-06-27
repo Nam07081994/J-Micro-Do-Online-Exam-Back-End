@@ -92,8 +92,8 @@ public class ExamService {
 					EXAM_IS_PRIVATE_SEARCH_KEY,
 					QueryCondition.builder().value(EXAM_PUBLIC_FLAG).operation(EQUAL_OPERATOR).build());
 		} else {
-			Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
-			String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
+			Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+			String userRoles = JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
 
 			if (userRoles.contains(USER_EXAM_ROLE)) {
 				return GenerateResponseHelper.generateMessageResponse(
@@ -157,11 +157,11 @@ public class ExamService {
 	}
 
 	public ResponseEntity<?> getExamsOption(String token) throws JsonProcessingException {
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
-		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		String userRoles = JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
 
 		if (!userRoles.contains(USER_EXAM_ROLE)
-				&& (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE))) {
+				&& (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE) || userRoles.contains(ADMIN_ROLE))) {
 			var examsUser = new ArrayList<>();
 			for (Exam exam : examRepository.findAllByOwnerId(userID)) {
 				ExamOptionDto examOptionDto = new ExamOptionDto(exam);
@@ -178,8 +178,8 @@ public class ExamService {
 
 	@Transactional
 	public ResponseEntity<?> createExam(CreateExamCommand command, String token) throws IOException {
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
-		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		String userRoles = JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
 		var exam =
 				Exam.builder()
 						.categoryId(command.getCategoryId())
@@ -274,7 +274,7 @@ public class ExamService {
 		}
 
 		if (!StringUtils.isEmpty(token)) {
-			Long ownerID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+			Long ownerID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 			if ((ownerID.compareTo(examOpt.get().getOwnerId()) != 0)
 					&& examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG) {
 				return GenerateResponseHelper.generateMessageResponse(
@@ -306,7 +306,7 @@ public class ExamService {
 	public ResponseEntity<?> generateAndDownloadExamPDF(String token, Long examId)
 			throws JsonProcessingException {
 		var pageNo = 0;
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 		var exam = examRepository.findById(examId);
 		if (exam.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(
@@ -750,5 +750,9 @@ public class ExamService {
 		List<Contest> contests =
 				contestRepository.findAllByExamIdAndEndAtAfter(id, LocalDateTime.now());
 		return contests.size() > 0;
+	}
+
+	private String getTokenWithoutBearer(String token){
+		return token.substring(7);
 	}
 }
