@@ -7,6 +7,7 @@
 - Article Service: http://localhost:8767/swagger-ui/index.html
 
 ## Run Project:
+- Run docker-compose file to generate Redis & Database.
 
 ### Exam Service:
 - clean:clean

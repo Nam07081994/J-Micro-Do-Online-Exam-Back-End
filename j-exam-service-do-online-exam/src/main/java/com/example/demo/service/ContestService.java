@@ -1,26 +1,68 @@
 package com.example.demo.service;
 
+import static com.example.demo.constant.Constant.USER_ID_TOKEN_KEY;
+import static com.example.demo.constant.SQLConstants.*;
+import static com.example.demo.constant.TranslationCodeConstants.*;
+
+import com.example.demo.command.QuerySearchCommand;
 import com.example.demo.command.contest.CreateExamineeAccount;
-import com.example.demo.command.contest.UpdateContestCommand;
+import com.example.demo.common.jwt.JwtTokenUtil;
+import com.example.demo.common.query.QueryCondition;
+import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.dto.CreateExamineeAccountDto;
 import com.example.demo.entity.Contest;
-import com.example.demo.mapper.ContestMapper;
 import com.example.demo.repository.ContestRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.ws.rs.BadRequestException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-@AllArgsConstructor
 public class ContestService {
-	private ContestRepository contestRepository;
 
-	public List<Contest> getContestsByUserName(String username) {
-		return contestRepository.getContestsByCreatedBy(username);
+	@Value("${app.url.create-accounts-exam-endpoint}")
+	private String CREATE_ACCOUNTS_EXAM_URI;
+
+	@Autowired private TranslationService translationService;
+
+	@Autowired private ContestRepository contestRepository;
+
+	public ResponseEntity<?> getContestsByOwner(String token, QuerySearchCommand command, String name)
+			throws JsonProcessingException {
+		Map<String, QueryCondition> searchParams = new HashMap<>();
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+
+		searchParams.put(
+				CONTEST_OWNER_SEARCH_KEY,
+				QueryCondition.builder().value(userID).operation(EQUAL_OPERATOR).build());
+
+		if (!StringUtils.isEmpty(name)) {
+			searchParams.put(
+					CONTEST_NAME_SEARCH_KEY,
+					QueryCondition.builder().value(name).operation(LIKE_OPERATOR).build());
+		}
+
+		return null;
+	}
+
+	public ResponseEntity<?> getContestsByUser(String token) {
+		// TODO: token -> get email user -> loop through list participants -> collection contest
+		// available -> return {contestName,startAt,endAt, examID}
+
+		return null;
 	}
 
 	public Contest getContestById(Long id) {
@@ -30,15 +72,6 @@ public class ContestService {
 	}
 
 	public Contest createContest(Contest contest) {
-		return contestRepository.save(contest);
-	}
-
-	public Contest updateContest(UpdateContestCommand command) {
-		var contest =
-				contestRepository
-						.findById(command.getId())
-						.orElseThrow(() -> new BadRequestException("Contest's id cannot be null"));
-		ContestMapper.INSTANCE.updateContest(command, contest);
 		return contestRepository.save(contest);
 	}
 
@@ -71,9 +104,9 @@ public class ContestService {
 						.build();
 		HttpEntity<CreateExamineeAccountDto> requestEntity = new HttpEntity<>(dto, headers);
 
-		String url = "http://localhost:8764/api/v1/auth/accounts-exam/registerAccountExam";
 		ResponseEntity<String> response =
-				restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+				restTemplate.exchange(
+						CREATE_ACCOUNTS_EXAM_URI, HttpMethod.POST, requestEntity, String.class);
 
 		if (response.getStatusCode() != HttpStatus.OK) {
 			return new ResponseEntity<>("Cannot create ExamineeAccount", HttpStatus.BAD_REQUEST);
@@ -81,16 +114,30 @@ public class ContestService {
 		return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
 	}
 
-	public ResponseEntity<?> deleteContest(Long id, String username) {
-		var contest = contestRepository.findById(id).orElse(null);
-		if (contest == null) {
-			return new ResponseEntity<>("Invalid contestId", HttpStatus.BAD_REQUEST);
+	public ResponseEntity<?> deleteContest(String token, Long id) throws JsonProcessingException {
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		Optional<Contest> contestOpt = contestRepository.findById(id);
+		if (contestOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_CONTEST));
 		}
-		if (contest.getCreatedBy().equals(username)) {
-			contestRepository.deleteById(id);
-			return new ResponseEntity<>("Contest deleted", HttpStatus.OK);
-		} else {
-			return new ResponseEntity<>("Cannot delete contest", HttpStatus.BAD_REQUEST);
+
+		if (userID.compareTo(contestOpt.get().getOwnerID()) != 0) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_YOUR_OWNER_CONTEST));
 		}
+
+		if (contestOpt.get().getEndAt().isBefore(LocalDateTime.now())) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(CONTEST_NOT_FINISH));
+		}
+
+		contestRepository.deleteById(id);
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(DELETE_CONTEST_SUCCESS));
 	}
 }

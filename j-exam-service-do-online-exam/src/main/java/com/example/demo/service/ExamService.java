@@ -8,6 +8,7 @@ import com.example.demo.Enum.QuestionType;
 import com.example.demo.command.QuerySearchCommand;
 import com.example.demo.command.exam.CreateExamCommand;
 import com.example.demo.command.exam.EditExamCommand;
+import com.example.demo.command.exam.UpdateExamThumbnailCommand;
 import com.example.demo.common.jwt.JwtTokenUtil;
 import com.example.demo.common.query.QueryCondition;
 import com.example.demo.common.query.QueryDateCondition;
@@ -16,6 +17,7 @@ import com.example.demo.dto.exam.ExamCardDto;
 import com.example.demo.dto.exam.ExamDto;
 import com.example.demo.dto.exam.ExamOptionDto;
 import com.example.demo.dto.question.QuestionExamDto;
+import com.example.demo.entity.Category;
 import com.example.demo.entity.Contest;
 import com.example.demo.entity.Exam;
 import com.example.demo.entity.Question;
@@ -92,8 +94,13 @@ public class ExamService {
 					EXAM_IS_PRIVATE_SEARCH_KEY,
 					QueryCondition.builder().value(EXAM_PUBLIC_FLAG).operation(EQUAL_OPERATOR).build());
 		} else {
-			Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
-			String userRoles = JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+			Long userID =
+					Long.valueOf(
+							JwtTokenUtil.getUserInfoFromToken(
+									JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+			String userRoles =
+					JwtTokenUtil.getUserInfoFromToken(
+							JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
 
 			if (userRoles.contains(USER_EXAM_ROLE)) {
 				return GenerateResponseHelper.generateMessageResponse(
@@ -157,11 +164,18 @@ public class ExamService {
 	}
 
 	public ResponseEntity<?> getExamsOption(String token) throws JsonProcessingException {
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
-		String userRoles = JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		String userRoles =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
 
 		if (!userRoles.contains(USER_EXAM_ROLE)
-				&& (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE) || userRoles.contains(ADMIN_ROLE))) {
+				&& (userRoles.contains(USER_ROLE)
+						|| userRoles.contains(USER_PREMIUM_ROLE)
+						|| userRoles.contains(ADMIN_ROLE))) {
 			var examsUser = new ArrayList<>();
 			for (Exam exam : examRepository.findAllByOwnerId(userID)) {
 				ExamOptionDto examOptionDto = new ExamOptionDto(exam);
@@ -178,8 +192,27 @@ public class ExamService {
 
 	@Transactional
 	public ResponseEntity<?> createExam(CreateExamCommand command, String token) throws IOException {
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
-		String userRoles = JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		String userRoles =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+		Optional<Category> cateOpt = categoryRepository.findById(command.getCategoryId());
+		Optional<Exam> examOpt = examRepository.findExamByExamName(command.getTitle());
+
+		if (cateOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST,
+					translationService.getTranslation(NOT_FOUND_CATEGORY_INFORMATION));
+		}
+
+		if (examOpt.isPresent()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(EXAM_NAME_EXIST));
+		}
+
 		var exam =
 				Exam.builder()
 						.categoryId(command.getCategoryId())
@@ -197,13 +230,12 @@ public class ExamService {
 		if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
 			exam.setIsPrivate(EXAM_PRIVATE_FLAG);
 			try {
-				// TODO: add rule upload contest
 				HttpHeaders headers = new HttpHeaders();
 				headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token);
 				HttpEntity<Object> entity = new HttpEntity<>(headers);
 				UriComponentsBuilder builder =
 						UriComponentsBuilder.fromUriString(CHECK_USER_UPLOAD_URI)
-								.queryParam("flag", CREATE_EXAM_FLAG);
+								.queryParam(FLAG_KEY, CREATE_EXAM_FLAG);
 				String url = builder.toUriString();
 				ResponseEntity<String> resp =
 						restTemplate.exchange(url, HttpMethod.GET, entity, String.class);
@@ -273,40 +305,49 @@ public class ExamService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
 		}
 
-		if (!StringUtils.isEmpty(token)) {
-			Long ownerID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
-			if ((ownerID.compareTo(examOpt.get().getOwnerId()) != 0)
-					&& examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG) {
-				return GenerateResponseHelper.generateMessageResponse(
-						HttpStatus.BAD_REQUEST,
-						translationService.getTranslation(NOT_ALLOW_ACCESS_EXAM_INFORMATION));
-			}
-		}
-
 		var categoryName =
 				categoryRepository.findById(examOpt.get().getCategoryId()).get().getCategoryName();
 
-		if (flag) {
+		if (flag && StringUtils.isEmpty(token)) {
 			var examCardDto = new ExamCardDto(examOpt.get(), categoryName);
 
 			return GenerateResponseHelper.generateDataResponse(
 					HttpStatus.OK, Map.of(DATA_KEY, examCardDto));
 		}
 
-		var questionExamDto =
-				questionRepository.findQuestionByExamId(examOpt.get().getId()).stream()
-						.map(QuestionExamDto::new)
-						.toList();
+		if (!StringUtils.isEmpty(token)) {
+			String userRoles =
+					JwtTokenUtil.getUserInfoFromToken(
+							JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+			Long userID =
+					Long.valueOf(
+							JwtTokenUtil.getUserInfoFromToken(
+									JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
-		var exam = new ExamDto(examOpt.get(), categoryName, questionExamDto);
+			if (userID.compareTo(examOpt.get().getOwnerId()) == 0
+					|| (userRoles.contains(ADMIN_ROLE) && examOpt.get().getIsPrivate() == EXAM_PUBLIC_FLAG)) {
+				var questionExamDto =
+						questionRepository.findQuestionByExamId(examOpt.get().getId()).stream()
+								.map(QuestionExamDto::new)
+								.toList();
 
-		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, exam));
+				var exam = new ExamDto(examOpt.get(), categoryName, questionExamDto);
+
+				return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, exam));
+			}
+		}
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
 	}
 
 	public ResponseEntity<?> generateAndDownloadExamPDF(String token, Long examId)
-			throws JsonProcessingException {
+			throws IOException {
 		var pageNo = 0;
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 		var exam = examRepository.findById(examId);
 		if (exam.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(
@@ -336,6 +377,7 @@ public class ExamService {
 			PDType0Font customFontManual = PDType0Font.load(document, fontStreamManual);
 			PDType0Font customFontBold = PDType0Font.load(document, fontStreamBold);
 			PDType0Font customFontBoldItalic = PDType0Font.load(document, fontStreamBoldItalic);
+
 			float startY = 780;
 			float margin = 10;
 			float borderY = pageSize.getLowerLeftY() + margin;
@@ -377,7 +419,7 @@ public class ExamService {
 			// Duration
 			String durationPdf =
 					language
-							? "Thời gian thi: " + exam.get().getDuration() + " phút"
+							? "Thời gian: " + exam.get().getDuration() + " phút"
 							: "Duration: " + exam.get().getDuration() + " minutes";
 			exportFileService.drawContent(
 					contentStream, durationPdf, customFontManual, Color.BLACK, 11, 25, startY - 15);
@@ -408,8 +450,8 @@ public class ExamService {
 				String questionType =
 						language
 								? ((question.getQuestionType() == QuestionType.MULTI
-										? " (Câu hỏi chọn nhiều đáp án)"
-										: " (Câu hỏi chọn một đáp án)"))
+										? " (Chọn nhiều đáp án)"
+										: " (Chọn một đáp án)"))
 								: ((question.getQuestionType() == QuestionType.MULTI
 										? " (Multiple choices question)"
 										: " (Single choice question)"));
@@ -629,7 +671,7 @@ public class ExamService {
 
 				// Get data for each row
 				var incrementedIndexAnswer =
-						question.getCorrectAnswers().stream().map(n -> n + 1L).collect(Collectors.toList());
+						question.getCorrectAnswers().stream().map(n -> n + 1L).toList();
 				var correctAnswer = incrementedIndexAnswer.toString().replaceAll("\\[|\\]", "");
 
 				String dataColumn1 =
@@ -686,6 +728,7 @@ public class ExamService {
 		}
 	}
 
+	@Transactional
 	public ResponseEntity<?> deleteExam(Long id, String token) throws JsonProcessingException {
 		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
 		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
@@ -721,9 +764,9 @@ public class ExamService {
 				HttpStatus.OK, translationService.getTranslation(DELETE_EXAM_INFORMATION_SUCCESS));
 	}
 
+	@Transactional
 	public ResponseEntity<?> editExam(String token, EditExamCommand command)
 			throws JsonProcessingException {
-		// TODO: finish logic create exam
 		var examOpt = examRepository.findById(command.getId());
 		if (examOpt.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(
@@ -738,7 +781,71 @@ public class ExamService {
 		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
 		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
 
-		return null;
+		if ((userRoles.contains(ADMIN_ROLE) && examOpt.get().getIsPrivate() == EXAM_PUBLIC_FLAG)
+				|| (userID.compareTo(examOpt.get().getOwnerId()) != 0)) {
+			Optional<Category> categoryOpt = categoryRepository.findById(command.getCategoryId());
+			if (categoryOpt.isEmpty()) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST,
+						translationService.getTranslation(NOT_FOUND_CATEGORY_INFORMATION));
+			}
+
+			if (command.getCategoryId().compareTo(examOpt.get().getCategoryId()) != 0) {
+				examOpt.get().setCategoryId(command.getCategoryId());
+			}
+
+			if (!Objects.equals(command.getDuration(), examOpt.get().getDuration())) {
+				examOpt.get().setDuration(command.getDuration());
+			}
+
+			if (!Objects.equals(command.getDescription(), examOpt.get().getDescription())) {
+				examOpt.get().setDescription(command.getDescription());
+			}
+
+			if (!Objects.equals(command.getTitle(), examOpt.get().getExamName())) {
+				Optional<Exam> examNameExist = examRepository.findExamByExamName(command.getTitle());
+				if (examNameExist.isPresent()) {
+					return GenerateResponseHelper.generateMessageResponse(
+							HttpStatus.BAD_REQUEST, translationService.getTranslation(EXAM_NAME_EXIST));
+				}
+				examOpt.get().setExamName(command.getTitle());
+			}
+
+			if (command.getQuestions().size() <= 0) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST, translationService.getTranslation(LIST_QUESTION_INVALID));
+			}
+			questionRepository.deleteQuestionByExamId(command.getId());
+			try {
+				List<Question> questions =
+						command.getQuestions().stream()
+								.map(
+										questionRequest -> {
+											Question question = new Question();
+
+											question.setQuestionPoint(questionRequest.getQuestionPoint());
+											question.setQuestion(questionRequest.getQuestion());
+											question.setQuestionType(
+													QuestionType.valueOf(questionRequest.getQuestionType()));
+											question.setAnswers(questionRequest.getAnswers());
+											question.setCorrectAnswers(questionRequest.getCorrectAnswers());
+											question.setExamId(command.getId());
+											return question;
+										})
+								.toList();
+				questionRepository.saveAll(questions);
+				examRepository.save(examOpt.get());
+			} catch (Exception ex) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST, translationService.getTranslation(INVALID_EXAM_QUESTION));
+			}
+
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.OK, translationService.getTranslation(UPDATE_EXAM_INFO_SUCCESS));
+		}
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
 	}
 
 	public ResponseEntity<?> getExamsDurationOption() {
@@ -752,7 +859,52 @@ public class ExamService {
 		return contests.size() > 0;
 	}
 
-	private String getTokenWithoutBearer(String token){
-		return token.substring(7);
+	public ResponseEntity<?> updateExamThumbnail(String token, UpdateExamThumbnailCommand command)
+			throws IOException {
+		Optional<Exam> examOpt = examRepository.findById(command.getId());
+		String userRoles =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+
+		if (examOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
+		}
+
+		if ((userRoles.contains(ADMIN_ROLE) && examOpt.get().getIsPrivate() == EXAM_PUBLIC_FLAG)
+				|| (userID.compareTo(examOpt.get().getOwnerId()) != 0)) {
+			try {
+				HttpHeaders headers = new HttpHeaders();
+				headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+				MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+				body.add(DOMAIN_KEY, EXAM_DOMAIN_NAME);
+				body.add(OLD_IMAGE_PATH_KEY, examOpt.get().getThumbnail());
+				ByteArrayResource contentsAsResource =
+						new ByteArrayResource(command.getFile().getBytes()) {
+							@Override
+							public String getFilename() {
+								return command.getFile().getOriginalFilename();
+							}
+						};
+				body.add(FILE_KEY, contentsAsResource);
+				HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+
+				ResponseEntity<String> response =
+						restTemplate.exchange(UPDATE_IMAGE_URI, HttpMethod.POST, requestEntity, String.class);
+
+				examOpt.get().setThumbnail(response.getBody());
+
+			} catch (Exception ex) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST, translationService.getTranslation(ERROR_UPDATE_EXAM_THUMBNAIL));
+			}
+		}
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
 	}
 }
