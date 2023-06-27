@@ -17,11 +17,13 @@ public class ExamCardDto {
 	private String description;
 	private String categoryName;
 	private String createAt;
+	private String thumbnail;
 
 	public ExamCardDto(Exam exam, String categoryName) {
 		this.id = exam.getId();
 		this.categoryName = categoryName;
 		this.examName = exam.getExamName();
+		this.thumbnail = exam.getThumbnail();
 		this.isPrivate = exam.getIsPrivate();
 		this.description = exam.getDescription();
 		this.createAt = exam.getCreatedAt().toString();

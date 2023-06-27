@@ -6,6 +6,7 @@ import static com.example.demo.constant.TranslationCodeConstants.NOT_FOUND_FILE_
 import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.service.TranslationService;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,12 @@ public class ApplicationExceptionHandler {
 	@ResponseStatus(HttpStatus.BAD_REQUEST)
 	@ExceptionHandler(InvalidDateFormatException.class)
 	public ResponseEntity<?> handleInvalidDateFormatException(InvalidDateFormatException ex) {
+		return GenerateResponseHelper.generateMessageResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+	}
+
+	@ResponseStatus(HttpStatus.BAD_REQUEST)
+	@ExceptionHandler(IOException.class)
+	public ResponseEntity<?> handleIOException(IOException ex) {
 		return GenerateResponseHelper.generateMessageResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
 	}
 }

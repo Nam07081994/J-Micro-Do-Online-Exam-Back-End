@@ -33,15 +33,32 @@ public class TranslationCodeConstants {
 
 	public static final String LIST_QUESTION_INVALID = "list-question-empty";
 
+	public static final String INVALID_EXAM_QUESTION = "invalid-exam-question";
+
+	public static final String UPDATE_EXAM_INFO_SUCCESS = "update-exam-info-success";
+
 	public static final String EXPORT_EXAM_FAIL = "export-exam-fail";
 
 	public static final String NOT_ALLOW_CREATE_EXAM = "user-exceed-limit-upload";
 
 	public static final String ERROR_CREATE_EXAM = "error-create-exam";
 
+	public static final String ERROR_UPDATE_EXAM_THUMBNAIL = "error-update-exam-thumbnail";
+
 	public static final String USER_NOT_HAVE_EXAM_OPTIONS = "not-found-exam-options";
 
 	public static final String EXAM_IS_BEING_USE = "exam-is-using";
+
+	public static final String EXAM_NAME_EXIST = "exam-name-exist";
+
+	// contest message code
+	public static final String NOT_FOUND_CONTEST = "not-found-contest";
+
+	public static final String CONTEST_NOT_FINISH = "contest-not-finish";
+
+	public static final String NOT_YOUR_OWNER_CONTEST = "not-owner-contest";
+
+	public static final String DELETE_CONTEST_SUCCESS = "delete-contest-success";
 
 	// sql message code
 	public static final String EXECUTE_SQL_ERROR = "sql-error";

@@ -84,7 +84,7 @@ public class AccountExamService {
 								EMPTY_STRING,
 								accountOpt.get().getEmail(),
 								StringConstant.USER_EXAM_ROLE_STRING,
-								String.valueOf(accountOpt.get().getId()))));
+								String.valueOf(accountOpt.get().getContestID()))));
 	}
 
 	public ResponseEntity<?> registerAccountsExam(CreateAccountsExamCommand command) {

@@ -6,6 +6,7 @@ import static com.example.demo.constant.Constant.GET_EXAM_CARD;
 import com.example.demo.command.QuerySearchCommand;
 import com.example.demo.command.exam.CreateExamCommand;
 import com.example.demo.command.exam.EditExamCommand;
+import com.example.demo.command.exam.UpdateExamThumbnailCommand;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.service.ExamService;
@@ -81,6 +82,16 @@ public class ExamController {
 		return examService.editExam(token, command);
 	}
 
+	@PutMapping(
+			value = "/update-thumbnail",
+			consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
+	public ResponseEntity<?> updateExamThumbnail(
+			@RequestHeader("Authorization") String token,
+			@ModelAttribute @Valid UpdateExamThumbnailCommand command)
+			throws IOException {
+		return examService.updateExamThumbnail(token, command);
+	}
+
 	@GetMapping("/durations")
 	public ResponseEntity<?> getExamsDuration() {
 		return examService.getExamsDurationOption();
@@ -88,8 +99,7 @@ public class ExamController {
 
 	@GetMapping("/downloadExam")
 	public ResponseEntity<?> downloadExam(
-			@RequestHeader("Authorization") String token, @RequestParam Long examId)
-			throws JsonProcessingException {
+			@RequestHeader("Authorization") String token, @RequestParam Long examId) throws IOException {
 		return examService.generateAndDownloadExamPDF(token, examId);
 	}
 

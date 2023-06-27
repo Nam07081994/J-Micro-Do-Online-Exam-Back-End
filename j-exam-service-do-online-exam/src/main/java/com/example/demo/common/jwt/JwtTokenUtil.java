@@ -25,4 +25,8 @@ public class JwtTokenUtil {
 		Map<String, Object> claimsMap = objectMapper.readValue(claims, new TypeReference<>() {});
 		return claimsMap.get(key).toString();
 	}
+
+	public static String getTokenWithoutBearer(String token) {
+		return token.substring(7);
+	}
 }

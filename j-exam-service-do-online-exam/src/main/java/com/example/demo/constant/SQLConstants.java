@@ -19,6 +19,11 @@ public class SQLConstants {
 
 	public static final String EXAM_CATEGORY_SEARCH_KEY = "categoryId";
 
+	// contest search field
+	public static final String CONTEST_NAME_SEARCH_KEY = "name";
+
+	public static final String CONTEST_OWNER_SEARCH_KEY = "ownerID";
+
 	// sql statement
 	public static final String AND_STATEMENT = " AND ";
 
