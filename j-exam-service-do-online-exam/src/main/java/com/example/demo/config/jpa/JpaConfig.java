@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.OffsetDateTime;
 import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.auditing.DateTimeProvider;
@@ -22,7 +21,6 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 		auditorAwareRef = "auditorProvider",
 		dateTimeProviderRef = "auditingDateTimeProvider")
 public class JpaConfig {
-	@Autowired private JwtTokenUtil jwtTokenUtil;
 
 	private static final ThreadLocal<String> REGISTERED_USER = new ThreadLocal<>();
 
@@ -49,7 +47,7 @@ public class JpaConfig {
 			if (accessToken != null && accessToken.startsWith(BEARER_PREFIX)) {
 				var token = accessToken.substring(7);
 				try {
-					userName = jwtTokenUtil.getuserNameFromToken(token);
+					userName = JwtTokenUtil.getuserNameFromToken(token);
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}

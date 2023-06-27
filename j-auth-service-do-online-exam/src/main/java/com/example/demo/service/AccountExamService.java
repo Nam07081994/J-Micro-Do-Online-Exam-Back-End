@@ -102,14 +102,14 @@ public class AccountExamService {
 		command
 				.getUserInfo()
 				.forEach(
-						(userName, email) -> {
+						(user) -> {
 							String userNameAndPassword = generateUsernameAndPassword();
 							String[] userNameAndPasswordArr =
 									userNameAndPassword.split(StringConstant.COMMA_STRING_CHARACTER);
 							AccountExam newAccount =
 									AccountExam.builder()
 											.username(userNameAndPasswordArr[0])
-											.email(email)
+											.email(user.getEmail())
 											.password(userNameAndPasswordArr[1])
 											.role(StringConstant.USER_EXAM_ROLE_STRING)
 											.startAt(command.getStartAt())
@@ -121,7 +121,7 @@ public class AccountExamService {
 							infoList.add(newAccount.getPassword());
 							infoList.add(userNameAndPasswordArr[0]);
 							infoList.add(newAccount.getEmail());
-							emailMapBody.put(userName, infoList);
+							emailMapBody.put(user.getUsername(), infoList);
 						});
 		for (Map.Entry<String, List<String>> entry : emailMapBody.entrySet()) {
 			String userName = entry.getKey();

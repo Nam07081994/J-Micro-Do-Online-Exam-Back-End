@@ -1,17 +1,14 @@
-package com.example.demo.command;
+package com.example.demo.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
 
-import lombok.*;
-
-@Setter
-@Getter
-@AllArgsConstructor
-@NoArgsConstructor
-public class CreateAccountsExamCommand {
+@Data
+@Builder
+public class CreateExamineeAccountDto {
 	private Long contestID;
 
 	private List<User> userInfo;
@@ -23,6 +20,7 @@ public class CreateAccountsExamCommand {
 	private LocalDateTime endAt;
 
 	@Data
+	@Builder
 	public static class User {
 		private String username;
 		private String email;

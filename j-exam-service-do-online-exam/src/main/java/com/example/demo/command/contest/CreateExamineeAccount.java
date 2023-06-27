@@ -7,11 +7,7 @@ public class CreateExamineeAccount {
 
 	private String stt;
 
-	private String hoten;
+	private String username;
 
 	private String email;
-
-	private String password;
-
-	private Boolean isCreated;
 }
