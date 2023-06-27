@@ -2,15 +2,15 @@ package com.example.demo.service;
 
 import com.example.demo.command.contest.CreateExamineeAccount;
 import com.example.demo.command.contest.UpdateContestCommand;
-import com.example.demo.common.generator.PasswordGenerator;
-import com.example.demo.dto.ExamineeAccount;
+import com.example.demo.dto.CreateExamineeAccountDto;
 import com.example.demo.entity.Contest;
 import com.example.demo.mapper.ContestMapper;
 import com.example.demo.repository.ContestRepository;
 import jakarta.ws.rs.BadRequestException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -42,14 +42,55 @@ public class ContestService {
 		return contestRepository.save(contest);
 	}
 
-	public List<ExamineeAccount> createExamineeAccount(List<CreateExamineeAccount> mails) {
-		mails.forEach(mail -> mail.setPassword(PasswordGenerator.generateRandomPassword()));
+	public ResponseEntity<?> createExamineeAccount(
+			List<CreateExamineeAccount> list, String bearerToken, Long contestId) {
+		var contest = contestRepository.findById(contestId).orElse(null);
+		if (contest == null) {
+			return new ResponseEntity<>("Invalid contestId", HttpStatus.BAD_REQUEST);
+		}
 
-		// TODO: Call to Auth-Service to create Examinee Account
 		RestTemplate restTemplate = new RestTemplate();
+		HttpHeaders headers = new HttpHeaders();
+		headers.set("Authorization", bearerToken);
+		headers.setContentType(MediaType.APPLICATION_JSON);
 
-		List<CreateExamineeAccount> result = new ArrayList<>();
+		CreateExamineeAccountDto dto =
+				CreateExamineeAccountDto.builder()
+						.contestID(contestId)
+						.startAt(contest.getStartAt())
+						.endAt(contest.getEndAt())
+						.userInfo(
+								list.stream()
+										.map(
+												account ->
+														CreateExamineeAccountDto.User.builder()
+																.username(account.getUsername())
+																.email(account.getEmail())
+																.build())
+										.collect(Collectors.toList()))
+						.build();
+		HttpEntity<CreateExamineeAccountDto> requestEntity = new HttpEntity<>(dto, headers);
 
-		return null;
+		String url = "http://localhost:8764/api/v1/auth/accounts-exam/registerAccountExam";
+		ResponseEntity<String> response =
+				restTemplate.exchange(url, HttpMethod.POST, requestEntity, String.class);
+
+		if (response.getStatusCode() != HttpStatus.OK) {
+			return new ResponseEntity<>("Cannot create ExamineeAccount", HttpStatus.BAD_REQUEST);
+		}
+		return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
+	}
+
+	public ResponseEntity<?> deleteContest(Long id, String username) {
+		var contest = contestRepository.findById(id).orElse(null);
+		if (contest == null) {
+			return new ResponseEntity<>("Invalid contestId", HttpStatus.BAD_REQUEST);
+		}
+		if (contest.getCreatedBy().equals(username)) {
+			contestRepository.deleteById(id);
+			return new ResponseEntity<>("Contest deleted", HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>("Cannot delete contest", HttpStatus.BAD_REQUEST);
+		}
 	}
 }
