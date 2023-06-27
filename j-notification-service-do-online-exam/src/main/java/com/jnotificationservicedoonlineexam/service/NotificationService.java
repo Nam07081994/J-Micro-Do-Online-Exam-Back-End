@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -41,7 +42,7 @@ public class NotificationService {
 		if (notificationRequest.getIsSave()) {}
 
 		// send fcm notify
-		if (notificationRequest.getTopicName().isEmpty()
+		if (StringUtils.isEmpty(notificationRequest.getTopicName())
 				&& Objects.equals(notificationRequest.getMode(), "direct")) {
 
 		} else if (Objects.equals(notificationRequest.getMode(), "topic")) {
@@ -52,7 +53,7 @@ public class NotificationService {
 	public ResponseEntity<?> getNotificationsByUser(QuerySearchCommand command, String token)
 			throws JsonProcessingException, ExecuteSQLException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
 		searchParams.put(
 				NOTIFICATION_USER_ID_KEY,
