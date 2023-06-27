@@ -80,4 +80,17 @@ public class ContestService {
 		}
 		return new ResponseEntity<>(response.getBody(), HttpStatus.OK);
 	}
+
+	public ResponseEntity<?> deleteContest(Long id, String username) {
+		var contest = contestRepository.findById(id).orElse(null);
+		if (contest == null) {
+			return new ResponseEntity<>("Invalid contestId", HttpStatus.BAD_REQUEST);
+		}
+		if (contest.getCreatedBy().equals(username)) {
+			contestRepository.deleteById(id);
+			return new ResponseEntity<>("Contest deleted", HttpStatus.OK);
+		} else {
+			return new ResponseEntity<>("Cannot delete contest", HttpStatus.BAD_REQUEST);
+		}
+	}
 }

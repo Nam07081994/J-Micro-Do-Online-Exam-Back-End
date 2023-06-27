@@ -61,4 +61,10 @@ public class ContestController {
 	public ResponseEntity<?> updateContest(@RequestBody UpdateContestCommand command) {
 		return ResponseEntity.ok(contestService.updateContest(command));
 	}
+
+	@DeleteMapping("/{id}")
+	public ResponseEntity<?> deleteContest(@RequestHeader("Authorization") String token, @PathVariable("id") Long id) throws JsonProcessingException {
+		var username = JwtTokenUtil.getuserNameFromToken(token);
+		return contestService.deleteContest(id, username);
+	}
 }
