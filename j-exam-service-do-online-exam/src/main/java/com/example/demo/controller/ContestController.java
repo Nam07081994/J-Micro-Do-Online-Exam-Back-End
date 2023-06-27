@@ -49,11 +49,12 @@ public class ContestController {
 	}
 
 	@PostMapping("/add/examinee/csv")
-	public ResponseEntity<?> addExaminee(@RequestParam("file") MultipartFile file) {
+	public ResponseEntity<?> addExaminee(
+			@RequestHeader("Authorization") String bearerToken,
+			@RequestParam("file") MultipartFile file,
+			@RequestParam Long contestId) {
 		var mails = CsvUtil.readFileCsv(file, CreateExamineeAccount.class);
-		var createdExamineeAccount = contestService.createExamineeAccount(mails);
-		// TODO: create account
-		return null;
+		return contestService.createExamineeAccount(mails, bearerToken, contestId);
 	}
 
 	@PostMapping("/update")
