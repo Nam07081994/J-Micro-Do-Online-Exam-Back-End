@@ -25,7 +25,7 @@ spring:
       host: localhost
       port: 50988
       connect-timeout: 15s
-      timeout: 14s
+      timeout: 15s
 #config for circuit breaker
   cloud:
     discovery:
@@ -37,9 +37,9 @@ spring:
           default:
             circuitBreakerConfig:
               failureRateThreshold: 50
-              waitDurationInOpenState: 10000
+              waitDurationInOpenState: 15000
             timeLimiterConfig:
-              timeoutDuration: 10000
+              timeoutDuration: 15000
 #config cloud gateway for router
     gateway:
       discovery:
