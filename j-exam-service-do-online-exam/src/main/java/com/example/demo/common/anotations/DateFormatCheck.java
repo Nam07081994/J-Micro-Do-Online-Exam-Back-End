@@ -12,7 +12,7 @@ package com.example.demo.common.anotations;
 })
 @java.lang.annotation.Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
 public @interface DateFormatCheck {
-	String pattern() default "yyyy-MM-dd HH:mm:ss.ffffff";
+	String pattern() default "yyyy-MM-dd HH:mm:ss";
 
 	boolean isChecked() default false;
 

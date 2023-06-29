@@ -50,7 +50,7 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 				queryCount.append(ORDER_STATEMENT);
 				String orStatement =
 						orParams.keySet().stream()
-								.map(s -> "c. " + s + " " + orParams.get(s).getOperation() + " :" + s)
+								.map(s -> "c. " + s + SPACE_STRING + orParams.get(s).getOperation() + " :" + s)
 								.collect(Collectors.joining(AND_STATEMENT));
 				query.append(orStatement);
 				queryCount.append(orStatement);

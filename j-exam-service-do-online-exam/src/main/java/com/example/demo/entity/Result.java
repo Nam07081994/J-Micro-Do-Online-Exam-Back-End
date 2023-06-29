@@ -1,6 +1,5 @@
 package com.example.demo.entity;
 
-import com.example.demo.extra.MapJsonType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -10,13 +9,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.LocalDateTime;
-import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -39,10 +36,6 @@ public class Result {
 	@Column(name = "total_point", nullable = false)
 	private Double totalPoint;
 
-	@Type(MapJsonType.class)
-	@Column(columnDefinition = "jsonb")
-	private Map<String, String> selectedAnswers;
-
 	@Column(name = "exam_id", nullable = false)
 	private Long examId;
 
@@ -50,7 +43,7 @@ public class Result {
 	private Long contestId;
 
 	@Column(name = "email_examinee", nullable = false)
-	private Long emailExaminee;
+	private String emailExaminee;
 
 	@Column(name = "created_by")
 	@CreatedBy

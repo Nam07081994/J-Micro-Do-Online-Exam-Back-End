@@ -36,7 +36,13 @@ public class Constant {
 	// token constants
 	public static final String USER_ID_TOKEN_KEY = "aud";
 
+	public static final String CONTEST_ID_TOKEN_KEY = "aud";
+
 	public static final String USER_ROLES_TOKEN_KEY = "sub";
+
+	public static final String USER_EMAIL_TOKEN_KEY = "jti";
+
+	public static final String USER_NAME_TOKEN_KEY = "username";
 
 	// exam status constants
 	public static final Boolean EXAM_PUBLIC_FLAG = false;

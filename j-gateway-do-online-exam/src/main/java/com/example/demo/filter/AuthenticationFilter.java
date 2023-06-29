@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.json.simple.JSONObject;
@@ -38,6 +39,9 @@ public class AuthenticationFilter
 
 	@Value("${app.url.get-image-pattern}")
 	private String FETCH_IMAGE_ENDPOINT_PATTERN;
+
+    @Value("${app.redis.TTL}")
+    private Long REDIS_TIME_TO_LIVE;
 
 	public AuthenticationFilter() {
 		super(Config.class);
@@ -143,14 +147,12 @@ public class AuthenticationFilter
         String cacheKey = generateCacheKey(role);
         ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
 
-        // Kiểm tra cache
+        // Check cache
         if (redisTemplate.hasKey(cacheKey)) {
-            // Cache hit, trả về kết quả từ cache
             return (String) valueOperations.get(cacheKey);
         } else {
-            // Cache miss, gọi API và lưu kết quả vào cache
             String responseBody = getEndpointsByRole(role, authHeader);
-            valueOperations.set(cacheKey, responseBody);
+            valueOperations.set(cacheKey, responseBody,REDIS_TIME_TO_LIVE, TimeUnit.SECONDS);
             return responseBody;
         }
     }

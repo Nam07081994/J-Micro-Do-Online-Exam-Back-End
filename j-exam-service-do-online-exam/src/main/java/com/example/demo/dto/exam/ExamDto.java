@@ -13,6 +13,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ExamDto {
+	private Long id;
 	private String examName;
 	private Integer duration;
 	private String categoryName;
@@ -23,5 +24,6 @@ public class ExamDto {
 		this.duration = exam.getDuration();
 		this.categoryName = categoryName;
 		this.questionsExam = qes;
+		this.id = exam.getId();
 	}
 }

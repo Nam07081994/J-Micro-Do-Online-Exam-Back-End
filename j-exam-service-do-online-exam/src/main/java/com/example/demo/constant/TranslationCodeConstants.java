@@ -51,7 +51,17 @@ public class TranslationCodeConstants {
 
 	public static final String EXAM_NAME_EXIST = "exam-name-exist";
 
+	public static final String SUBMIT_EXAM_SUCCESS = "submit-exam-success";
+
+	public static final String EXAM_ANSWERS_INVALID = "exam-answers-invalid";
+
+	public static final String INVALID_TIME_SUBMIT_CONTEST = "invalid-time-submit-contest";
+
 	// contest message code
+	public static final String NOT_FOUND_USER_EXAM = "not-found-user-exam";
+
+	public static final String CREATE_CONTEST_SUCCESS = "create-contest-success";
+
 	public static final String NOT_FOUND_CONTEST = "not-found-contest";
 
 	public static final String CONTEST_NOT_FINISH = "contest-not-finish";
@@ -59,6 +69,18 @@ public class TranslationCodeConstants {
 	public static final String NOT_YOUR_OWNER_CONTEST = "not-owner-contest";
 
 	public static final String DELETE_CONTEST_SUCCESS = "delete-contest-success";
+
+	public static final String NOT_ALLOW_ACCESS_CONTEST = "not-allow-access-contest";
+
+	public static final String USER_ACCOUNT_EXAM_EXIST = "user-account-exam-exist";
+
+	public static final String ERROR_CREATE_CONTEST = "error-create-contest";
+
+	public static final String NOT_ALLOW_CREATE_CONTEST = "not-allow-create-contest";
+
+	public static final String CONTEST_RANGE_TIME_INVALID = "contest-range-time-invalid";
+
+	public static final String CONTEST_DURATION_INVALID = "contest-duration-invalid";
 
 	// sql message code
 	public static final String EXECUTE_SQL_ERROR = "sql-error";

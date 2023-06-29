@@ -6,9 +6,7 @@ import static com.example.demo.constant.TranslationCodeConstants.*;
 
 import com.example.demo.Enum.QuestionType;
 import com.example.demo.command.QuerySearchCommand;
-import com.example.demo.command.exam.CreateExamCommand;
-import com.example.demo.command.exam.EditExamCommand;
-import com.example.demo.command.exam.UpdateExamThumbnailCommand;
+import com.example.demo.command.exam.*;
 import com.example.demo.common.jwt.JwtTokenUtil;
 import com.example.demo.common.query.QueryCondition;
 import com.example.demo.common.query.QueryDateCondition;
@@ -17,16 +15,10 @@ import com.example.demo.dto.exam.ExamCardDto;
 import com.example.demo.dto.exam.ExamDto;
 import com.example.demo.dto.exam.ExamOptionDto;
 import com.example.demo.dto.question.QuestionExamDto;
-import com.example.demo.entity.Category;
-import com.example.demo.entity.Contest;
-import com.example.demo.entity.Exam;
-import com.example.demo.entity.Question;
+import com.example.demo.entity.*;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
-import com.example.demo.repository.CategoryRepository;
-import com.example.demo.repository.ContestRepository;
-import com.example.demo.repository.ExamRepository;
-import com.example.demo.repository.QuestionRepository;
+import com.example.demo.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
@@ -82,10 +74,11 @@ public class ExamService {
 
 	@Autowired private ContestRepository contestRepository;
 
+	@Autowired private ResultRepository resultRepository;
+
 	public ResponseEntity<?> getAllExam(
 			QuerySearchCommand command, String token, String name, String category_ids, int duration)
 			throws JsonProcessingException, ExecuteSQLException, InvalidDateFormatException {
-		// TODO: handle logic get exam for normal_user or premium_user
 		Map<String, QueryCondition> orParams = new HashMap<>();
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
@@ -728,10 +721,80 @@ public class ExamService {
 		}
 	}
 
+	// TODO: need test
+	public ResponseEntity<?> checkExam(String token, SubmitExamCommand command)
+			throws JsonProcessingException {
+		// TODO handle save history exam
+		LocalDateTime timeSubmit = LocalDateTime.now();
+		String userRoles =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+		Optional<Exam> examOpt = examRepository.findById(command.getId());
+
+		if (examOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
+		}
+		if (command.getAnswers().size() <= 0) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(EXAM_ANSWERS_INVALID));
+		}
+
+		// check answer
+		double mark = 0d;
+		double totalMark = 0d;
+		List<Question> questions = questionRepository.findQuestionByExamId(command.getId());
+		for (Question question : questions) {
+			totalMark = totalMark + question.getQuestionPoint();
+			for (var j = 0; j < command.getAnswers().size(); j++) {
+				if (question.getId().compareTo(command.getAnswers().get(j).getId()) == 0) {
+					var listAnswer1 = question.getCorrectAnswers();
+					var listAnswer2 = command.getAnswers().get(j).getAnswers();
+					Collections.sort(listAnswer1);
+					Collections.sort(listAnswer2);
+					if (listAnswer1.equals(listAnswer2)) {
+						mark = mark + question.getQuestionPoint();
+					}
+				}
+			}
+		}
+
+		var newResult = new Result();
+		if (userRoles.contains(USER_EXAM_ROLE)) {
+			Long contestID =
+					Long.valueOf(
+							JwtTokenUtil.getUserInfoFromToken(
+									JwtTokenUtil.getTokenWithoutBearer(token), CONTEST_ID_TOKEN_KEY));
+			newResult.setContestId(contestID);
+			Optional<Contest> contestOpt = contestRepository.findById(contestID);
+			if (timeSubmit.isAfter(contestOpt.get().getEndAt())) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST, translationService.getTranslation(INVALID_TIME_SUBMIT_CONTEST));
+			}
+		}
+
+		String email =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_EMAIL_TOKEN_KEY);
+		newResult.setExamId(command.getId());
+		newResult.setTotalPoint(mark / totalMark * 100);
+		newResult.setEmailExaminee(email);
+
+		resultRepository.save(newResult);
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(SUBMIT_EXAM_SUCCESS));
+	}
+
 	@Transactional
 	public ResponseEntity<?> deleteExam(Long id, String token) throws JsonProcessingException {
-		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		String userRoles =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
 		Optional<Exam> examOpt = examRepository.findById(id);
 		if (examOpt.isEmpty()) {
