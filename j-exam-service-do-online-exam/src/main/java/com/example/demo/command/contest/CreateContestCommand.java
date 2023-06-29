@@ -18,8 +18,6 @@ public class CreateContestCommand {
 	@NotEmpty(message = "Contest description is mandatory")
 	private String description;
 
-	private String duration;
-
 	private LocalDateTime startAt;
 
 	private LocalDateTime endAt;

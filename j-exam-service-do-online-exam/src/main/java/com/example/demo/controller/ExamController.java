@@ -4,9 +4,7 @@ import static com.example.demo.constant.Constant.FETCH_EXAM;
 import static com.example.demo.constant.Constant.GET_EXAM_CARD;
 
 import com.example.demo.command.QuerySearchCommand;
-import com.example.demo.command.exam.CreateExamCommand;
-import com.example.demo.command.exam.EditExamCommand;
-import com.example.demo.command.exam.UpdateExamThumbnailCommand;
+import com.example.demo.command.exam.*;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.service.ExamService;
@@ -108,5 +106,12 @@ public class ExamController {
 			@RequestHeader("Authorization") String token, @RequestParam("id") Long id)
 			throws JsonProcessingException {
 		return examService.deleteExam(id, token);
+	}
+
+	@PostMapping("/submit")
+	public ResponseEntity<?> submitExam(
+			@RequestHeader("Authorization") String token, @RequestBody @Valid SubmitExamCommand command)
+			throws JsonProcessingException {
+		return examService.checkExam(token, command);
 	}
 }

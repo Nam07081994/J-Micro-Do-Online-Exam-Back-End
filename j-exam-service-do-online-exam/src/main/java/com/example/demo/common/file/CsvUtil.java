@@ -27,6 +27,7 @@ public class CsvUtil {
 			objectList = csvToBean.parse();
 		} catch (IOException e) {
 			e.printStackTrace();
+			System.out.println(e.getMessage());
 		}
 
 		return objectList;

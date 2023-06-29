@@ -13,6 +13,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionExamDto {
+	private Long id;
 	private String question;
 	private List<String> answers;
 	private Integer questionPoint;
@@ -23,5 +24,6 @@ public class QuestionExamDto {
 		this.answers = ques.getAnswers();
 		this.questionPoint = ques.getQuestionPoint();
 		this.questionType = ques.getQuestionType();
+		this.id = ques.getId();
 	}
 }

@@ -1,17 +1,15 @@
-package com.example.demo.command.contest;
+package com.example.demo.dto.contest;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class CreateExamineeAccount {
-
-	private String stt;
-
+public class AccountExamDto {
 	private String username;
-
 	private String email;
 }

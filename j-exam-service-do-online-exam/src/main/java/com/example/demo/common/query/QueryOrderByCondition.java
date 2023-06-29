@@ -14,6 +14,8 @@ public class QueryOrderByCondition {
 			case 6 -> ORDER_STATEMENT + "createdAt" + " DESC ";
 			case 7 -> ORDER_STATEMENT + "categoryName" + " ASC ";
 			case 8 -> ORDER_STATEMENT + "categoryName" + " DESC ";
+			case 9 -> ORDER_STATEMENT + "name" + " ASC ";
+			case 10 -> ORDER_STATEMENT + "name" + " DESC ";
 			default -> EMPTY_STRING;
 		};
 	}
