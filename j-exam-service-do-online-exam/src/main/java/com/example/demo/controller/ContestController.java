@@ -34,14 +34,14 @@ public class ContestController {
 				token, QuerySearchCommand.from(from_date, to_date, page_index, page_size, order_by), name);
 	}
 
-	//user exam fetch contest exam
+	// user exam fetch contest exam
 	@GetMapping("/user")
 	public ResponseEntity<?> fetchContest(@RequestHeader("Authorization") String token)
 			throws JsonProcessingException {
 		return contestService.getContestByUser(token);
 	}
 
-	//get detail contest
+	// get detail contest
 	@GetMapping("/get")
 	public ResponseEntity<?> getContestById(
 			@RequestHeader("Authorization") String token, @RequestParam("id") Long id)

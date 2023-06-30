@@ -1,4 +1,6 @@
 server:
+  servlet:
+    context-path: /
   port: 8767
 
 #config eureka client to connect eureka server
@@ -28,6 +30,17 @@ spring:
       hibernate:
         format_sql: true
     database: postgresql
+#openapi config
+openapi:
+  service:
+    title: article-service doc
+    version: 1.0.0
+    url:  http://localhost:8763
+springdoc:
+  api-docs:
+    path: /api/v1/articles/v3/api-docs
+  swagger-ui:
+    path: /api/v1/articles/swagger-ui.html
 #app custom config
 app:
   url:
