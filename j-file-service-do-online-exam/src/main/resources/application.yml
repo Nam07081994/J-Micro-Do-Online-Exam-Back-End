@@ -1,14 +1,27 @@
+#application custom config
 application:
   resource-url: http://localhost:8763/api/v1/files
   user-default-thumbnail-name: default_user_thumbnail.jpg
-
 server:
+  servlet:
+     context-path: /
   port: 8766
-
+#spring config
 spring:
   application:
     name: file-service
-
+#openapi config
+openapi:
+  service:
+    title: file-service doc
+    version: 1.0.0
+    url: http://localhost:8763
+springdoc:
+  api-docs:
+    path: /api/v1/files/v3/api-docs
+  swagger-ui:
+    path: /api/v1/files/v3/swagger-ui.html
+#eureka config
 eureka:
   instance:
     hostname: localhost

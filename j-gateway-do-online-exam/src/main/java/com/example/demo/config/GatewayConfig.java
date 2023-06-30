@@ -37,13 +37,14 @@ public class GatewayConfig {
 		return new RestTemplate(requestFactory);
 	}
 
-    @Bean
-    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
-        RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
-        redisTemplate.setConnectionFactory(redisConnectionFactory);
-        redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
-        return redisTemplate;
-    }
+	@Bean
+	public RedisTemplate<String, Object> redisTemplate(
+			RedisConnectionFactory redisConnectionFactory) {
+		RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
+		redisTemplate.setConnectionFactory(redisConnectionFactory);
+		redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
+		return redisTemplate;
+	}
 
 	@Bean
 	public KeyResolver userKeyResolver() {

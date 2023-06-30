@@ -1,5 +1,7 @@
 #server port
 server:
+  servlet:
+    context-path: /
   port: 8764
 
 #config for rabbit-mq
@@ -67,7 +69,18 @@ eureka:
     service-url:
       default-zone: http://localhost:8761/eureka/
     enabled: true
-
+#openapi config
+openapi:
+  service:
+    title: auth-service doc
+    version: 1.0.0
+    url: http://localhost:8763
+springdoc:
+  api-docs:
+    path: /api/v1/auth/v3/api-docs
+  swagger-ui:
+    path: /api/v1/auth/swagger-ui.html
+#
 app:
   format:
     date: yyyy-MM-dd HH:mm:ss

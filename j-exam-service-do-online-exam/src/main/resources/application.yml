@@ -1,11 +1,14 @@
 server:
+  servlet:
+    context-path: /
   port: 8765
 
+#spring config
 spring:
   application:
     name: exam-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/online-exam-db-1
+    url: jdbc:postgresql://localhost:5432/online-exam-db-2
     username: postgres
     password: 12345
     driver-class-name: org.postgresql.Driver
@@ -17,7 +20,18 @@ spring:
       hibernate:
         format_sql: true
     database: postgresql
-
+#openapi config
+openapi:
+  service:
+    title: exam-service doc
+    version: 1.0.0
+    url: http://localhost:8763
+springdoc:
+  api-docs:
+    path: /api/v1/exams/v3/api-docs
+  swagger-ui:
+    path: /api/v1/exams/swagger-ui.html
+#eureka config
 eureka:
   instance:
     hostname: localhost

@@ -40,8 +40,8 @@ public class AuthenticationFilter
 	@Value("${app.url.get-image-pattern}")
 	private String FETCH_IMAGE_ENDPOINT_PATTERN;
 
-    @Value("${app.redis.TTL}")
-    private Long REDIS_TIME_TO_LIVE;
+	@Value("${app.redis.TTL}")
+	private Long REDIS_TIME_TO_LIVE;
 
 	public AuthenticationFilter() {
 		super(Config.class);
@@ -51,8 +51,7 @@ public class AuthenticationFilter
 
 	@Autowired private JwtTokenUtil jwtTokenUtil;
 
-    @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+	@Autowired private RedisTemplate<String, Object> redisTemplate;
 
 	@Override
 	public GatewayFilter apply(Config config) {
@@ -62,7 +61,8 @@ public class AuthenticationFilter
 			Pattern patternDate = Pattern.compile(FETCH_IMAGE_ENDPOINT_PATTERN);
 			Matcher matcher = patternDate.matcher(endPoint);
 			response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-			if (!matcher.matches() && !getEndpointsByRoleFromCache(PUBLIC_ROLE, EMPTY_STRING).contains(endPoint)) {
+			if (!matcher.matches()
+					&& !getEndpointsByRoleFromCache(PUBLIC_ROLE, EMPTY_STRING).contains(endPoint)) {
 				if (!exchange.getRequest().getHeaders().containsKey(HttpHeaders.AUTHORIZATION)) {
 					response.setStatusCode(HttpStatus.UNAUTHORIZED);
 					return response.writeWith(
@@ -85,7 +85,8 @@ public class AuthenticationFilter
 										generateResponse(response, MESSAGE_INVALID_TOKEN, MESSAGE_INVALID_ROLES)));
 					}
 
-					String responseBody = getEndpointsByRoleFromCache(roleArrStr, Constant.BEARER_PREFIX + authHeader);
+					String responseBody =
+							getEndpointsByRoleFromCache(roleArrStr, Constant.BEARER_PREFIX + authHeader);
 
 					if (responseBody != null) {
 						List<String> stringList = new ObjectMapper().readValue(responseBody, List.class);
@@ -142,24 +143,23 @@ public class AuthenticationFilter
 		return endPoints.getBody();
 	}
 
+	public String getEndpointsByRoleFromCache(String role, String authHeader) {
+		String cacheKey = generateCacheKey(role);
+		ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
 
-    public String getEndpointsByRoleFromCache(String role, String authHeader) {
-        String cacheKey = generateCacheKey(role);
-        ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
+		// Check cache
+		if (redisTemplate.hasKey(cacheKey)) {
+			return (String) valueOperations.get(cacheKey);
+		} else {
+			String responseBody = getEndpointsByRole(role, authHeader);
+			valueOperations.set(cacheKey, responseBody, REDIS_TIME_TO_LIVE, TimeUnit.SECONDS);
+			return responseBody;
+		}
+	}
 
-        // Check cache
-        if (redisTemplate.hasKey(cacheKey)) {
-            return (String) valueOperations.get(cacheKey);
-        } else {
-            String responseBody = getEndpointsByRole(role, authHeader);
-            valueOperations.set(cacheKey, responseBody,REDIS_TIME_TO_LIVE, TimeUnit.SECONDS);
-            return responseBody;
-        }
-    }
-
-    private String generateCacheKey(String role) {
-        StringBuilder keyBuilder = new StringBuilder();
-        keyBuilder.append(role);
-        return keyBuilder.toString();
-    }
+	private String generateCacheKey(String role) {
+		StringBuilder keyBuilder = new StringBuilder();
+		keyBuilder.append(role);
+		return keyBuilder.toString();
+	}
 }

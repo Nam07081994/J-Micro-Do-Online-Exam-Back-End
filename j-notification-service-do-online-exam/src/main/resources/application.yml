@@ -1,6 +1,8 @@
 server:
+  servlet:
+    context-path: /
   port: 8768
-
+#spring config
 spring:
   application:
     name: notification-service
@@ -19,7 +21,18 @@ spring:
     database: postgresql
   rabbitmq:
     addresses: localhost:5672
-#rabbitmq config
+#openapi config
+openapi:
+  service:
+    title: notify-service doc
+    version: 1.0.0
+    url: http://localhost:8763
+springdoc:
+  api-docs:
+    path: /api/v1/notify/v3/api-docs
+  swagger-ui:
+    path: /api/v1/notify/swagger-ui.html
+#rabbitmq custom config
 app:
   format:
     date: yyyy-MM-dd HH:mm:ss

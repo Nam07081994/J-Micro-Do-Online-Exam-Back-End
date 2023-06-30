@@ -31,7 +31,7 @@ public class TopicConfig {
 	}
 
 	@Bean
-	public Binding internalToNotificationBinding() {
+	public Binding internalToTopicBinding() {
 		return BindingBuilder.bind(topicQueue())
 				.to(internalTopicExchange())
 				.with(this.internalTopicRoutingKey);

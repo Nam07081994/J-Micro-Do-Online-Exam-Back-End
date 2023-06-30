@@ -1,10 +1,11 @@
 #server port
 server:
+  servlet:
+    context-path: /
   port: 8763
 redis:
   host: localhost
   port: 6379
-
 #config eureka client to connect eureka server
 eureka:
   instance:
@@ -16,7 +17,7 @@ eureka:
     service-url:
       default-zone: http://localhost:8761/eureka/
     enabled: true
-
+#spring config
 spring:
   application.name: gate-way
 #config connect to redis
@@ -42,6 +43,13 @@ spring:
               timeoutDuration: 15000
 #config cloud gateway for router
     gateway:
+      globalcors:
+        add-to-simple-url-handler-mapping: true
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:5173/"
+            allowedHeaders: "*"
+            allowedMethods: "*"
       discovery:
         locator:
           enabled: true
@@ -170,7 +178,29 @@ spring:
                 key-resolver: "#{@userKeyResolver}"
                 redis-rate-limiter.replenishRate: 2
                 redis-rate-limiter.burstCapacity: 2
-
+#openai config
+springdoc:
+  enable-native-support: true
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+    config-url: /v3/api-docs/swagger-config
+    urls:
+      - url: /v3/api-docs
+        name: API Gateway Service
+      - url: /api/v1/auth/v3/api-docs
+        name: Auth Service
+      - url: /api/v1/articles/v3/api-docs
+        name: Articles Service
+      - url: /api/v1/exams/v3/api-docs
+        name: Exams Service
+      - url: /api/v1/files/v3/api-docs
+        name: Files Service
+      - url: /api/v1/notify/v3/api-docs
+        name: Notify Service
+#config
 management:
   security:
     enabled: false
