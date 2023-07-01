@@ -5,6 +5,9 @@ server:
 
 #spring config
 spring:
+  sql:
+    init:
+      mode: always
   application:
     name: exam-service
   datasource:
@@ -20,6 +23,7 @@ spring:
       hibernate:
         format_sql: true
     database: postgresql
+    defer-datasource-initialization: true
 #openapi config
 openapi:
   service:
