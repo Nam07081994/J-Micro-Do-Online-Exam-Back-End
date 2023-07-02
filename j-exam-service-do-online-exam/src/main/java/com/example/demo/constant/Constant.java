@@ -19,6 +19,7 @@ public class Constant {
 
 	public static final String FLAG_KEY = "flag";
 
+	public static final String VALIDATE_KEY = "validate";
 	//
 	public static final String EXAM_DOMAIN_NAME = "exams";
 
