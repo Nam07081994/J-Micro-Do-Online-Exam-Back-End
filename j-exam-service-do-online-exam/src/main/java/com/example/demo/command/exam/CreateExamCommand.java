@@ -1,11 +1,10 @@
 package com.example.demo.command.exam;
 
+import com.example.demo.Enum.ExamType;
 import com.example.demo.common.anotations.MultipleFileExtension;
-import com.example.demo.dto.question.QuestionDto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import java.util.List;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -30,5 +29,8 @@ public class CreateExamCommand {
 
 	@MultipleFileExtension private MultipartFile file;
 
-	private List<QuestionDto> questions;
+	@NotEmpty(message = "Exam questions is mandatory")
+	private String questions;
+
+	private ExamType examType = ExamType.PREMIUM;
 }

@@ -1,8 +1,6 @@
 package com.example.demo.config;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import java.time.Duration;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
@@ -63,8 +61,9 @@ public class GatewayConfig {
 						id ->
 								new Resilience4JConfigBuilder(id)
 										.circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
-										.timeLimiterConfig(
-												TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(15)).build())
+										//										.timeLimiterConfig(
+										//
+										//	TimeLimiterConfig.custom().timeoutDuration(Duration.ofSeconds(15)).build())
 										.build());
 	}
 }

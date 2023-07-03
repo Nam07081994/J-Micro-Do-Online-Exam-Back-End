@@ -10,7 +10,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,7 +59,6 @@ public class ApplicationExceptionHandler {
 				.forEach(err -> errorMap.put(err.getField(), err.getDefaultMessage()));
 
 		return GenerateResponseHelper.generateDataResponse(
-				HttpStatus.BAD_REQUEST,
-				Map.of(VALIDATE_KEY, errorMap));
+				HttpStatus.BAD_REQUEST, Map.of(VALIDATE_KEY, errorMap));
 	}
 }

@@ -8,8 +8,7 @@ import com.example.demo.exceptions.ExecuteSQLException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import org.springframework.stereotype.Repository;
@@ -93,13 +92,20 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 	private void setQueryParam(Map<String, QueryCondition> searchParams, TypedQuery<T> query)
 			throws ExecuteSQLException {
 		AtomicBoolean flag = new AtomicBoolean(false);
+		List<Long> newRay = new ArrayList<>();
+		newRay.add(1L);
 		searchParams.forEach(
 				(s, s2) -> {
 					switch (s2.getOperation()) {
 						case LIKE_OPERATOR -> query.setParameter(
 								s, PERCENT_OPERATOR + s2.getValue() + PERCENT_OPERATOR);
-						case EQUAL_OPERATOR, GREATER_THAN_OPERATION, LESS_THAN_OPERATOR, IN_OPERATOR -> query
-								.setParameter(s, s2.getValue());
+						case EQUAL_OPERATOR, GREATER_THAN_OPERATION, LESS_THAN_OPERATOR -> query.setParameter(
+								s, s2.getValue());
+						case IN_OPERATOR -> query.setParameter(
+								s,
+								((List<String>) s2.getValue())
+										.stream().map(sx -> Long.parseLong(sx.trim())).collect(Collectors.toList()));
+							// case IN_OPERATOR -> query.setParameter(s, newRay);
 						default -> flag.set(true);
 					}
 				});

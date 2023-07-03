@@ -45,7 +45,7 @@ public class Constant {
 
 	public static final String USER_NAME_TOKEN_KEY = "username";
 
-	// exam status constants
+	// exam status flag constants
 	public static final Boolean EXAM_PUBLIC_FLAG = false;
 
 	public static final Boolean EXAM_PRIVATE_FLAG = true;
