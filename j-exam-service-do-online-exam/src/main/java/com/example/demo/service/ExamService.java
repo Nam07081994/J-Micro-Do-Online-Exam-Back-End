@@ -87,7 +87,7 @@ public class ExamService {
 		Map<String, QueryCondition> orParams = new HashMap<>();
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (StringUtils.isEmpty(token)) {
+		if (token == null || JwtTokenUtil.getTokenWithoutBearer(token).equals("null")) {
 			searchParams.put(
 					EXAM_IS_PRIVATE_SEARCH_KEY,
 					QueryCondition.builder().value(EXAM_PUBLIC_FLAG).operation(EQUAL_OPERATOR).build());
@@ -191,16 +191,21 @@ public class ExamService {
 	public ResponseEntity<?> fetchExamByCategory() {
 		Map<String, List<ExamByCategoryDto>> result = new HashMap<>();
 		var query = examRepository.fetchExamByCategory();
-		//		query.forEach(e->{
-		//			if(result.containsKey(e.getCategoryName())){
-		//				result.get(e.getCategoryName()).add(e);
-		//			}else{
-		//				List<ExamByCategoryDto> ex = new ArrayList<>();
-		//				result.put(e.getCategoryName(),ex);
-		//			}
-		//		});
+		for (ExamByCategoryDto examByCategoryDto : query) {
+			if (result.containsKey(
+					examByCategoryDto.getCategoryName() + "," + examByCategoryDto.getCategoryID())) {
+				result
+						.get(examByCategoryDto.getCategoryName() + "," + examByCategoryDto.getCategoryID())
+						.add(examByCategoryDto);
+			} else {
+				List<ExamByCategoryDto> ex = new ArrayList<>();
+				ex.add(examByCategoryDto);
+				result.put(
+						examByCategoryDto.getCategoryName() + "," + examByCategoryDto.getCategoryID(), ex);
+			}
+		}
 
-		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, query));
+		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, result));
 	}
 
 	@Transactional

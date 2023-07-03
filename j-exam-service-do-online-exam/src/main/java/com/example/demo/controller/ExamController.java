@@ -4,11 +4,15 @@ import static com.example.demo.constant.Constant.FETCH_EXAM;
 import static com.example.demo.constant.Constant.GET_EXAM_CARD;
 
 import com.example.demo.command.QuerySearchCommand;
-import com.example.demo.command.exam.*;
+import com.example.demo.command.exam.CreateExamCommand;
+import com.example.demo.command.exam.EditExamCommand;
+import com.example.demo.command.exam.SubmitExamCommand;
+import com.example.demo.command.exam.UpdateExamThumbnailCommand;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.service.ExamService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import java.io.IOException;
 import lombok.AllArgsConstructor;
@@ -24,7 +28,7 @@ public class ExamController {
 
 	@GetMapping("/get")
 	public ResponseEntity<?> getExams(
-			@RequestHeader("Authorization") String token,
+			@RequestHeader("Authorization") @Nullable String token,
 			@RequestParam(name = "name", required = false) String name,
 			@RequestParam(name = "duration", defaultValue = "-1") int duration,
 			@RequestParam(name = "category_ids", required = false) String category_ids,

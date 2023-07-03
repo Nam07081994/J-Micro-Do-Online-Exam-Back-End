@@ -18,7 +18,7 @@ public interface ExamRepository extends JpaRepository<Exam, Long>, AbstractRepos
 	List<Integer> getListDuration();
 
 	@Query(
-			"Select new com.example.demo.dto.ExamByCategoryDto(c.categoryName,e.id,e.duration,e.downloadNumber,e.examName) "
+			"Select new com.example.demo.dto.ExamByCategoryDto(c.categoryName,e.id,e.duration,e.downloadNumber,e.examName,e.thumbnail,e.description,e.categoryId) "
 					+ "FROM Category c JOIN Exam e ON c.id = e.categoryId")
 	List<ExamByCategoryDto> fetchExamByCategory();
 }

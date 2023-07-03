@@ -53,7 +53,10 @@ public class NotificationService {
 	public ResponseEntity<?> getNotificationsByUser(QuerySearchCommand command, String token)
 			throws JsonProcessingException, ExecuteSQLException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
 		searchParams.put(
 				NOTIFICATION_USER_ID_KEY,
