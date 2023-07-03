@@ -1,5 +1,6 @@
 package com.example.demo.repository;
 
+import com.example.demo.dto.ExamByCategoryDto;
 import com.example.demo.entity.Exam;
 import java.util.List;
 import java.util.Optional;
@@ -15,4 +16,9 @@ public interface ExamRepository extends JpaRepository<Exam, Long>, AbstractRepos
 
 	@Query(value = "SELECT distinct e.duration from Exam e")
 	List<Integer> getListDuration();
+
+	@Query(
+			"Select new com.example.demo.dto.ExamByCategoryDto(c.categoryName,e.id,e.duration,e.downloadNumber,e.examName) "
+					+ "FROM Category c JOIN Exam e ON c.id = e.categoryId")
+	List<ExamByCategoryDto> fetchExamByCategory();
 }

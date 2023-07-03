@@ -43,6 +43,11 @@ public class ExamController {
 				duration);
 	}
 
+	@GetMapping("/hot/category")
+	public ResponseEntity<?> getHotExamsByCategory() {
+		return examService.fetchExamByCategory();
+	}
+
 	@GetMapping("/options")
 	public ResponseEntity<?> getExamsOption(@RequestHeader("Authorization") String token)
 			throws JsonProcessingException {
@@ -75,7 +80,7 @@ public class ExamController {
 
 	@PostMapping("/edit")
 	public ResponseEntity<?> editExam(
-			@RequestHeader("Authorization") String token, @ModelAttribute EditExamCommand command)
+			@RequestHeader("Authorization") String token, @RequestBody @Valid EditExamCommand command)
 			throws JsonProcessingException {
 		return examService.editExam(token, command);
 	}

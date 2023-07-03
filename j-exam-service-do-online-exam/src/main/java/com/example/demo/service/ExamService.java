@@ -4,6 +4,7 @@ import static com.example.demo.constant.Constant.*;
 import static com.example.demo.constant.SQLConstants.*;
 import static com.example.demo.constant.TranslationCodeConstants.*;
 
+import com.example.demo.Enum.ExamType;
 import com.example.demo.Enum.QuestionType;
 import com.example.demo.command.QuerySearchCommand;
 import com.example.demo.command.exam.*;
@@ -11,15 +12,19 @@ import com.example.demo.common.jwt.JwtTokenUtil;
 import com.example.demo.common.query.QueryCondition;
 import com.example.demo.common.query.QueryDateCondition;
 import com.example.demo.common.response.GenerateResponseHelper;
+import com.example.demo.dto.ExamByCategoryDto;
 import com.example.demo.dto.exam.ExamCardDto;
 import com.example.demo.dto.exam.ExamDto;
 import com.example.demo.dto.exam.ExamOptionDto;
+import com.example.demo.dto.question.QuestionDto;
 import com.example.demo.dto.question.QuestionExamDto;
 import com.example.demo.entity.*;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.awt.*;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -183,8 +188,26 @@ public class ExamService {
 				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_HAVE_EXAM_OPTIONS));
 	}
 
+	public ResponseEntity<?> fetchExamByCategory() {
+		Map<String, List<ExamByCategoryDto>> result = new HashMap<>();
+		var query = examRepository.fetchExamByCategory();
+		//		query.forEach(e->{
+		//			if(result.containsKey(e.getCategoryName())){
+		//				result.get(e.getCategoryName()).add(e);
+		//			}else{
+		//				List<ExamByCategoryDto> ex = new ArrayList<>();
+		//				result.put(e.getCategoryName(),ex);
+		//			}
+		//		});
+
+		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, query));
+	}
+
 	@Transactional
 	public ResponseEntity<?> createExam(CreateExamCommand command, String token) throws IOException {
+		ObjectMapper objectMapper = new ObjectMapper();
+		List<QuestionDto> listQuestionDtoConvert =
+				objectMapper.readValue(command.getQuestions(), new TypeReference<>() {});
 		Long userID =
 				Long.valueOf(
 						JwtTokenUtil.getUserInfoFromToken(
@@ -221,6 +244,7 @@ public class ExamService {
 		}
 
 		if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
+			exam.setExamType(ExamType.PRIVATE);
 			exam.setIsPrivate(EXAM_PRIVATE_FLAG);
 			try {
 				HttpHeaders headers = new HttpHeaders();
@@ -241,7 +265,10 @@ public class ExamService {
 				return GenerateResponseHelper.generateMessageResponse(
 						HttpStatus.BAD_REQUEST, translationService.getTranslation(ERROR_CREATE_EXAM));
 			}
+		} else if (userRoles.contains(ADMIN_ROLE)) {
+			exam.setExamType(command.getExamType());
 		}
+
 		// save thumbnail
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -265,7 +292,7 @@ public class ExamService {
 		var savedExamId = savedExam.getId();
 
 		List<Question> questions =
-				command.getQuestions().stream()
+				listQuestionDtoConvert.stream()
 						.map(
 								questionRequest -> {
 									Question question = new Question();
