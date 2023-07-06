@@ -43,15 +43,13 @@ public class Exam {
 	@Column(name = "category_id", nullable = false)
 	private Long categoryId;
 
+	private String categoryName;
+
 	@Column(name = "owner_id")
 	private Long ownerId;
 
-	@Column(name = "is_private")
-	private Boolean isPrivate = false;
-
-	@Enumerated(EnumType.STRING)
 	@Column(name = "exam_type")
-	private ExamType examType;
+	private String examType;
 
 	@Column(name = "created_by")
 	@CreatedBy

@@ -12,20 +12,27 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ExamCardDto {
 	private Long id;
+	private String image;
+	private Long categoryID;
+	private String createAt;
 	private String examName;
-	private Boolean isPrivate;
+	private String examType;
+	private Integer duration;
 	private String description;
 	private String categoryName;
-	private String createAt;
-	private String thumbnail;
+	private Long downloadNumber;
 
-	public ExamCardDto(Exam exam, String categoryName) {
+
+	public ExamCardDto(Exam exam) {
 		this.id = exam.getId();
-		this.categoryName = categoryName;
+		this.examType = exam.getExamType();
+		this.image = exam.getThumbnail();
+		this.duration = exam.getDuration();
 		this.examName = exam.getExamName();
-		this.thumbnail = exam.getThumbnail();
-		this.isPrivate = exam.getIsPrivate();
+		this.categoryID = exam.getCategoryId();
 		this.description = exam.getDescription();
+		this.categoryName = exam.getCategoryName();
 		this.createAt = exam.getCreatedAt().toString();
+		this.downloadNumber = exam.getDownloadNumber();
 	}
 }
