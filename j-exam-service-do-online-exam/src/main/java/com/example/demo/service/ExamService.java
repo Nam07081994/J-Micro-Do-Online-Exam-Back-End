@@ -7,12 +7,14 @@ import static com.example.demo.constant.TranslationCodeConstants.*;
 import com.example.demo.Enum.ExamType;
 import com.example.demo.Enum.QuestionType;
 import com.example.demo.command.QuerySearchCommand;
-import com.example.demo.command.exam.*;
+import com.example.demo.command.exam.CreateExamCommand;
+import com.example.demo.command.exam.EditExamCommand;
+import com.example.demo.command.exam.SubmitExamCommand;
+import com.example.demo.command.exam.UpdateExamThumbnailCommand;
 import com.example.demo.common.jwt.JwtTokenUtil;
 import com.example.demo.common.query.QueryCondition;
 import com.example.demo.common.query.QueryDateCondition;
 import com.example.demo.common.response.GenerateResponseHelper;
-import com.example.demo.dto.ExamByCategoryDto;
 import com.example.demo.dto.exam.ExamCardDto;
 import com.example.demo.dto.exam.ExamDto;
 import com.example.demo.dto.exam.ExamOptionDto;
@@ -81,17 +83,18 @@ public class ExamService {
 
 	@Autowired private ResultRepository resultRepository;
 
+	// TODO: need check
 	public ResponseEntity<?> getAllExam(
 			QuerySearchCommand command, String token, String name, String category_ids, int duration)
 			throws JsonProcessingException, ExecuteSQLException, InvalidDateFormatException {
 		Map<String, QueryCondition> orParams = new HashMap<>();
 		Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (token == null || JwtTokenUtil.getTokenWithoutBearer(token).equals("null")) {
-			searchParams.put(
-					EXAM_IS_PRIVATE_SEARCH_KEY,
-					QueryCondition.builder().value(EXAM_PUBLIC_FLAG).operation(EQUAL_OPERATOR).build());
-		} else {
+		searchParams.put(
+				EXAM_TYPE_SEARCH_KEY,
+				QueryCondition.builder().value(ExamType.PRIVATE.name()).operation(NOT_LIKE_OPERATOR).build());
+
+		if ((token != null && !JwtTokenUtil.getTokenWithoutBearer(token).equals("null"))) {
 			Long userID =
 					Long.valueOf(
 							JwtTokenUtil.getUserInfoFromToken(
@@ -104,6 +107,11 @@ public class ExamService {
 				return GenerateResponseHelper.generateMessageResponse(
 						HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
 			}
+
+			if (userRoles.contains(ADMIN_ROLE)) {
+				searchParams.remove(EXAM_TYPE_SEARCH_KEY);
+			}
+
 			if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
 				orParams.put(
 						EXAM_OWNER_ID_SEARCH_KEY,
@@ -119,10 +127,22 @@ public class ExamService {
 
 		if (!StringUtils.isEmpty(category_ids)) {
 			String[] arrCategoryIDs = category_ids.split(COMMA_STRING_CHARACTER);
-			var categoryIDs = Arrays.asList(arrCategoryIDs);
-			searchParams.put(
-					EXAM_CATEGORY_SEARCH_KEY,
-					QueryCondition.builder().value(categoryIDs).operation(IN_OPERATOR).build());
+			try {
+				Long.valueOf(arrCategoryIDs[0]);
+				searchParams.put(
+						EXAM_CATEGORY_ID_SEARCH_KEY,
+						QueryCondition.builder()
+								.value(Arrays.stream(arrCategoryIDs).map(sx -> Long.parseLong(sx.trim())).toList())
+								.operation(IN_OPERATOR)
+								.build());
+			} catch (NumberFormatException ex) {
+				searchParams.put(
+						EXAM_CATEGORY_NAME_SEARCH_KEY,
+						QueryCondition.builder()
+								.value(Arrays.asList(arrCategoryIDs))
+								.operation(IN_OPERATOR)
+								.build());
+			}
 		}
 
 		if (duration > 0) {
@@ -146,21 +166,14 @@ public class ExamService {
 
 		List<Exam> exams = (List<Exam>) result.get(DATA_KEY);
 
-		var examCardDto =
-				exams.stream()
-						.map(
-								e -> {
-									var categoryName =
-											categoryRepository.findById(e.getCategoryId()).get().getCategoryName();
-									return new ExamCardDto(e, categoryName);
-								})
-						.toList();
+		var examCardDto = exams.stream().map(ExamCardDto::new).toList();
 
 		result.put(DATA_KEY, examCardDto);
 
 		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
 	}
 
+	// TODO: need check
 	public ResponseEntity<?> getExamsOption(String token) throws JsonProcessingException {
 		Long userID =
 				Long.valueOf(
@@ -170,12 +183,16 @@ public class ExamService {
 				JwtTokenUtil.getUserInfoFromToken(
 						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
 
-		if (!userRoles.contains(USER_EXAM_ROLE)
-				&& (userRoles.contains(USER_ROLE)
-						|| userRoles.contains(USER_PREMIUM_ROLE)
-						|| userRoles.contains(ADMIN_ROLE))) {
+		if (!userRoles.contains(USER_EXAM_ROLE)) {
 			var examsUser = new ArrayList<>();
-			for (Exam exam : examRepository.findAllByOwnerId(userID)) {
+			List<Exam> examsGet = new ArrayList<>();
+			if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
+				examsGet = examRepository.findAllByOwnerId(userID);
+			} else if (userRoles.contains(ADMIN_ROLE)) {
+				examsGet = examRepository.findAllByExamTypeIsNotLike(ExamType.PRIVATE.name());
+			}
+
+			for (Exam exam : examsGet) {
 				ExamOptionDto examOptionDto = new ExamOptionDto(exam);
 				examsUser.add(examOptionDto);
 			}
@@ -188,26 +205,24 @@ public class ExamService {
 				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_HAVE_EXAM_OPTIONS));
 	}
 
+	// TODO: need check
 	public ResponseEntity<?> fetchExamByCategory() {
-		Map<String, List<ExamByCategoryDto>> result = new HashMap<>();
+		Map<String, List<ExamCardDto>> result = new HashMap<>();
 		var query = examRepository.fetchExamByCategory();
-		for (ExamByCategoryDto examByCategoryDto : query) {
-			if (result.containsKey(
-					examByCategoryDto.getCategoryName() + "," + examByCategoryDto.getCategoryID())) {
-				result
-						.get(examByCategoryDto.getCategoryName() + "," + examByCategoryDto.getCategoryID())
-						.add(examByCategoryDto);
+		for (Exam ex : query) {
+			if (result.containsKey(ex.getCategoryName())) {
+				result.get(ex.getCategoryName()).add(new ExamCardDto(ex));
 			} else {
-				List<ExamByCategoryDto> ex = new ArrayList<>();
-				ex.add(examByCategoryDto);
-				result.put(
-						examByCategoryDto.getCategoryName() + "," + examByCategoryDto.getCategoryID(), ex);
+				List<ExamCardDto> examsDto = new ArrayList<>();
+				examsDto.add(new ExamCardDto(ex));
+				result.put(ex.getCategoryName(), examsDto);
 			}
 		}
 
 		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, result));
 	}
 
+	// TODO: need check
 	@Transactional
 	public ResponseEntity<?> createExam(CreateExamCommand command, String token) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -236,6 +251,7 @@ public class ExamService {
 
 		var exam =
 				Exam.builder()
+						.categoryName(cateOpt.get().getCategoryName())
 						.categoryId(command.getCategoryId())
 						.examName(command.getTitle())
 						.ownerId(userID)
@@ -249,8 +265,7 @@ public class ExamService {
 		}
 
 		if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
-			exam.setExamType(ExamType.PRIVATE);
-			exam.setIsPrivate(EXAM_PRIVATE_FLAG);
+			exam.setExamType(ExamType.PRIVATE.name());
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token);
@@ -271,7 +286,7 @@ public class ExamService {
 						HttpStatus.BAD_REQUEST, translationService.getTranslation(ERROR_CREATE_EXAM));
 			}
 		} else if (userRoles.contains(ADMIN_ROLE)) {
-			exam.setExamType(command.getExamType());
+			exam.setExamType(command.getExamType().name());
 		}
 
 		// save thumbnail
@@ -321,7 +336,6 @@ public class ExamService {
 				HttpStatus.OK, translationService.getTranslation(SAVE_EXAM_INFORMATION_SUCCESS));
 	}
 
-	// TODO: need test
 	public ResponseEntity<?> getExamByName(String token, String name, Boolean flag)
 			throws JsonProcessingException {
 		Optional<Exam> examOpt = examRepository.findExamByExamName(name);
@@ -330,17 +344,7 @@ public class ExamService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
 		}
 
-		var categoryName =
-				categoryRepository.findById(examOpt.get().getCategoryId()).get().getCategoryName();
-
-		if (flag && StringUtils.isEmpty(token)) {
-			var examCardDto = new ExamCardDto(examOpt.get(), categoryName);
-
-			return GenerateResponseHelper.generateDataResponse(
-					HttpStatus.OK, Map.of(DATA_KEY, examCardDto));
-		}
-
-		if (!StringUtils.isEmpty(token)) {
+		if ((token != null || !JwtTokenUtil.getTokenWithoutBearer(token).equals("null")) && !flag) {
 			String userRoles =
 					JwtTokenUtil.getUserInfoFromToken(
 							JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
@@ -349,17 +353,59 @@ public class ExamService {
 							JwtTokenUtil.getUserInfoFromToken(
 									JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
-			if (userID.compareTo(examOpt.get().getOwnerId()) == 0
-					|| (userRoles.contains(ADMIN_ROLE) && examOpt.get().getIsPrivate() == EXAM_PUBLIC_FLAG)) {
+			String userEmail =
+					JwtTokenUtil.getUserInfoFromToken(
+							JwtTokenUtil.getTokenWithoutBearer(token), USER_EMAIL_TOKEN_KEY);
+
+			Boolean isExceptToAccessExam = false;
+
+			if (userRoles.contains(USER_PREMIUM_ROLE)) {
+				if (examOpt.get().getOwnerId().compareTo(userID) == 0
+						|| !examOpt.get().getExamType().equals(ExamType.PRIVATE.name())) {
+					isExceptToAccessExam = true;
+				}
+			} else if (userRoles.contains(USER_EXAM_ROLE)) {
+				// TODO: check validate user exam
+				Boolean isValidParticipant = false;
+				Optional<Contest> contest = contestRepository.findById(userID);
+				if (contest.isEmpty()) {
+					return null;
+				}
+
+				var listParticipants = contest.get().getParticipants();
+				for (String participant : listParticipants) {
+					if (participant.contains(userEmail)) {
+						isValidParticipant = true;
+						break;
+					}
+				}
+
+				if (!isValidParticipant) {
+					return null;
+				}
+
+			} else if (userRoles.contains(USER_ROLE)) {
+				if (examOpt.get().getExamType().equals(ExamType.FREE.name())
+						|| examOpt.get().getOwnerId().compareTo(userID) == 0) {
+					isExceptToAccessExam = true;
+				}
+			}
+
+			if (isExceptToAccessExam) {
 				var questionExamDto =
 						questionRepository.findQuestionByExamId(examOpt.get().getId()).stream()
 								.map(QuestionExamDto::new)
 								.toList();
 
-				var exam = new ExamDto(examOpt.get(), categoryName, questionExamDto);
+				var exam = new ExamDto(examOpt.get(), questionExamDto);
 
 				return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, exam));
 			}
+		} else if (flag) {
+			var examCardDto = new ExamCardDto(examOpt.get());
+
+			return GenerateResponseHelper.generateDataResponse(
+					HttpStatus.OK, Map.of(DATA_KEY, examCardDto));
 		}
 
 		return GenerateResponseHelper.generateMessageResponse(
@@ -369,21 +415,22 @@ public class ExamService {
 	public ResponseEntity<?> generateAndDownloadExamPDF(String token, Long examId)
 			throws IOException {
 		var pageNo = 0;
-		Long userID =
-				Long.valueOf(
-						JwtTokenUtil.getUserInfoFromToken(
-								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		//        Long userID =
+		//                Long.valueOf(
+		//                        JwtTokenUtil.getUserInfoFromToken(
+		//                                JwtTokenUtil.getTokenWithoutBearer(token),
+		// USER_ID_TOKEN_KEY));
 		var exam = examRepository.findById(examId);
 		if (exam.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
 		}
-		if (exam.get().getIsPrivate() == EXAM_PRIVATE_FLAG
-				&& (exam.get().getOwnerId().compareTo(userID) != 0)) {
-			return GenerateResponseHelper.generateMessageResponse(
-					HttpStatus.BAD_REQUEST,
-					translationService.getTranslation(NOT_ALLOW_ACCESS_EXAM_INFORMATION));
-		}
+
+		//        if ((exam.get().getOwnerId().compareTo(userID) != 0)) {
+		//            return GenerateResponseHelper.generateMessageResponse(
+		//                    HttpStatus.BAD_REQUEST,
+		//                    translationService.getTranslation(NOT_ALLOW_ACCESS_EXAM_INFORMATION));
+		//        }
 
 		var questions = questionRepository.findQuestionByExamId(examId);
 
@@ -818,6 +865,7 @@ public class ExamService {
 				HttpStatus.OK, translationService.getTranslation(SUBMIT_EXAM_SUCCESS));
 	}
 
+	// TODO: need test
 	@Transactional
 	public ResponseEntity<?> deleteExam(Long id, String token) throws JsonProcessingException {
 		String userRoles =
@@ -839,9 +887,9 @@ public class ExamService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
 		}
 
-		if (userRoles.contains(ADMIN_ROLE) && examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG
-				|| (userID.compareTo(examOpt.get().getOwnerId()) != 0
-						&& examOpt.get().getIsPrivate() == EXAM_PRIVATE_FLAG)) {
+		if (!(userRoles.contains(ADMIN_ROLE)
+						&& !examOpt.get().getExamType().equals(ExamType.PRIVATE))
+				|| !(userID.compareTo(examOpt.get().getOwnerId()) == 0)) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_ALLOW_REMOVE_EXAM));
 		}
@@ -859,6 +907,7 @@ public class ExamService {
 				HttpStatus.OK, translationService.getTranslation(DELETE_EXAM_INFORMATION_SUCCESS));
 	}
 
+	// TODO: need test
 	@Transactional
 	public ResponseEntity<?> editExam(String token, EditExamCommand command)
 			throws JsonProcessingException {
@@ -876,8 +925,9 @@ public class ExamService {
 		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
 		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
 
-		if ((userRoles.contains(ADMIN_ROLE) && examOpt.get().getIsPrivate() == EXAM_PUBLIC_FLAG)
-				|| (userID.compareTo(examOpt.get().getOwnerId()) != 0)) {
+		if ((userRoles.contains(ADMIN_ROLE)
+						&& !examOpt.get().getExamType().equals(ExamType.PRIVATE.name()))
+				|| (userID.compareTo(examOpt.get().getOwnerId()) == 0)) {
 			Optional<Category> categoryOpt = categoryRepository.findById(command.getCategoryId());
 			if (categoryOpt.isEmpty()) {
 				return GenerateResponseHelper.generateMessageResponse(
@@ -970,8 +1020,9 @@ public class ExamService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
 		}
 
-		if ((userRoles.contains(ADMIN_ROLE) && examOpt.get().getIsPrivate() == EXAM_PUBLIC_FLAG)
-				|| (userID.compareTo(examOpt.get().getOwnerId()) != 0)) {
+		if ((userRoles.contains(ADMIN_ROLE)
+						&& !examOpt.get().getExamType().equals(ExamType.PRIVATE.name()))
+				|| (userID.compareTo(examOpt.get().getOwnerId()) == 0)) {
 			try {
 				HttpHeaders headers = new HttpHeaders();
 				headers.setContentType(MediaType.MULTIPART_FORM_DATA);

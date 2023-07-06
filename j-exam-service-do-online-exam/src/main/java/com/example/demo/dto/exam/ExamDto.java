@@ -19,11 +19,11 @@ public class ExamDto {
 	private String categoryName;
 	private List<QuestionExamDto> questionsExam;
 
-	public ExamDto(Exam exam, String categoryName, List<QuestionExamDto> qes) {
+	public ExamDto(Exam exam, List<QuestionExamDto> qes) {
+		this.id = exam.getId();
+		this.questionsExam = qes;
 		this.examName = exam.getExamName();
 		this.duration = exam.getDuration();
-		this.categoryName = categoryName;
-		this.questionsExam = qes;
-		this.id = exam.getId();
+		this.categoryName = exam.getCategoryName();
 	}
 }

@@ -11,13 +11,17 @@ public class SQLConstants {
 	// exam search field
 	public static final String EXAM_IS_PRIVATE_SEARCH_KEY = "isPrivate";
 
+	public static final String EXAM_TYPE_SEARCH_KEY = "examType";
+
 	public static final String EXAM_OWNER_ID_SEARCH_KEY = "ownerId";
 
 	public static final String EXAM_NAME_SEARCH_KEY = "examName";
 
 	public static final String EXAM_DURATION_SEARCH_KEY = "duration";
 
-	public static final String EXAM_CATEGORY_SEARCH_KEY = "categoryId";
+	public static final String EXAM_CATEGORY_ID_SEARCH_KEY = "categoryId";
+
+	public static final String EXAM_CATEGORY_NAME_SEARCH_KEY = "categoryName";
 
 	// contest search field
 	public static final String CONTEST_NAME_SEARCH_KEY = "name";
@@ -33,9 +37,13 @@ public class SQLConstants {
 
 	public static final String LIKE_OPERATOR = "LIKE";
 
+	public static final String NOT_LIKE_OPERATOR = "NOT LIKE";
+
 	public static final String IN_OPERATOR = "IN";
 
 	public static final String EQUAL_OPERATOR = "=";
+
+	public static final String NOT_EQUAL_OPERATOR = "!=";
 
 	public static final String GREATER_THAN_OPERATION = ">=";
 

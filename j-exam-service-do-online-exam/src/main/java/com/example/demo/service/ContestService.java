@@ -94,7 +94,6 @@ public class ContestService {
 						command.getPage_index(),
 						Contest.class);
 
-		// TODO: convert to dto
 		List<Contest> contests = (List<Contest>) result.get(DATA_KEY);
 		var examsOwnerDto =
 				contests.stream()

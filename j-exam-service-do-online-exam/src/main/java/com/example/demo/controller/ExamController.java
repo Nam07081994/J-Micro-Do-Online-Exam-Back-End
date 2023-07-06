@@ -1,13 +1,14 @@
 package com.example.demo.controller;
 
-import static com.example.demo.constant.Constant.FETCH_EXAM;
-import static com.example.demo.constant.Constant.GET_EXAM_CARD;
+import static com.example.demo.constant.Constant.*;
 
 import com.example.demo.command.QuerySearchCommand;
 import com.example.demo.command.exam.CreateExamCommand;
 import com.example.demo.command.exam.EditExamCommand;
 import com.example.demo.command.exam.SubmitExamCommand;
 import com.example.demo.command.exam.UpdateExamThumbnailCommand;
+import com.example.demo.common.jwt.JwtTokenUtil;
+import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.service.ExamService;
@@ -15,7 +16,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -102,6 +107,23 @@ public class ExamController {
 	@GetMapping("/durations")
 	public ResponseEntity<?> getExamsDuration() {
 		return examService.getExamsDurationOption();
+	}
+
+	@GetMapping("/orderByOptions")
+	public ResponseEntity<?> getExamOrderByOptions(
+			@RequestHeader("Authorization") @Nullable String token) {
+		List<Object> orderOptions = new ArrayList<>();
+		orderOptions.add(Map.of(1, "Order by name ASC"));
+		orderOptions.add(Map.of(2, "Order by name DESC"));
+		orderOptions.add(Map.of(3, "Order by duration ASC"));
+		orderOptions.add(Map.of(4, "Order by duration DESC"));
+		if (token != null && !JwtTokenUtil.getTokenWithoutBearer(token).equals("null")) {
+			orderOptions.add(Map.of(5, "Order by createAt ASC"));
+			orderOptions.add(Map.of(6, "Order by createAt DESC"));
+		}
+
+		return GenerateResponseHelper.generateDataResponse(
+				HttpStatus.OK, Map.of(DATA_KEY, orderOptions));
 	}
 
 	@GetMapping("/downloadExam")
