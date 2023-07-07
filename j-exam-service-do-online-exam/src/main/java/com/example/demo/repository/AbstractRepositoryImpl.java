@@ -98,8 +98,11 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 					switch (s2.getOperation()) {
 						case LIKE_OPERATOR, NOT_LIKE_OPERATOR -> query.setParameter(
 								s, PERCENT_OPERATOR + s2.getValue() + PERCENT_OPERATOR);
-						case EQUAL_OPERATOR,NOT_EQUAL_OPERATOR, GREATER_THAN_OPERATION, LESS_THAN_OPERATOR, IN_OPERATOR -> query
-								.setParameter(s, s2.getValue());
+						case EQUAL_OPERATOR,
+								NOT_EQUAL_OPERATOR,
+								GREATER_THAN_OPERATION,
+								LESS_THAN_OPERATOR,
+								IN_OPERATOR -> query.setParameter(s, s2.getValue());
 						default -> flag.set(true);
 					}
 				});

@@ -35,7 +35,7 @@ public class ExamController {
 	public ResponseEntity<?> getExams(
 			@RequestHeader("Authorization") @Nullable String token,
 			@RequestParam(name = "name", required = false) String name,
-			@RequestParam(name = "duration", defaultValue = "-1") int duration,
+			@RequestParam(name = "durations", required = false) String duration,
 			@RequestParam(name = "category_ids", required = false) String category_ids,
 			@RequestParam(name = "from_date", required = false) String from_date,
 			@RequestParam(name = "to_date", required = false) String to_date,
@@ -75,6 +75,13 @@ public class ExamController {
 			@RequestHeader("Authorization") String token, @RequestParam("name") String name)
 			throws JsonProcessingException {
 		return examService.getExamByName(token, name, GET_EXAM_CARD);
+	}
+
+	@GetMapping("/detail")
+	public ResponseEntity<?> getExamEdit(
+			@RequestHeader("Authorization") String token, @RequestParam("id") Long id)
+			throws JsonProcessingException {
+		return examService.getExamEdit(token, id);
 	}
 
 	@PostMapping(

@@ -148,13 +148,13 @@ public class AuthenticationFilter
 		ValueOperations<String, Object> valueOperations = redisTemplate.opsForValue();
 
 		// Check cache
-		 //if (redisTemplate.hasKey(cacheKey)) {
+		// if (redisTemplate.hasKey(cacheKey)) {
 		//	return (String) valueOperations.get(cacheKey);
-		 //} else {
+		// } else {
 		String responseBody = getEndpointsByRole(role, authHeader);
 		valueOperations.set(cacheKey, responseBody, REDIS_TIME_TO_LIVE, TimeUnit.SECONDS);
 		return responseBody;
-		 //}
+		// }
 	}
 
 	private String generateCacheKey(String role) {
