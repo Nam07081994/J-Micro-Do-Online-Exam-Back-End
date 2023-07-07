@@ -1,6 +1,5 @@
 package com.example.demo.entity;
 
-import com.example.demo.Enum.ExamType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

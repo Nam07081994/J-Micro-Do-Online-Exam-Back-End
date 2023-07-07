@@ -1,11 +1,8 @@
 package com.example.demo.config.security;
 
-import com.example.demo.config.security.OauthCustom.CustomOAuth2UserService;
-import com.example.demo.config.security.OauthCustom.OAuthLoginSuccessHandler;
 import com.example.demo.config.security.SecurityCustom.CustomAuthenticationEntryPoint;
 import com.example.demo.config.security.SecurityCustom.CustomUserDetailsService;
 import com.example.demo.config.security.SecurityCustom.Filter.JwtTokenAuthenticationFilter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,16 +18,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
-
-	@Autowired private CustomOAuth2UserService oauth2UserService;
-
-	@Autowired private OAuthLoginSuccessHandler oauthLoginSuccessHandler;
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
@@ -45,32 +37,17 @@ public class SecurityConfig {
 				.securityContext()
 				.requireExplicitSave(false)
 				.and()
-				.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.ALWAYS))
+				.sessionManagement(
+						session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.cors()
 				.disable()
-				.csrf(
-						(csrf) ->
-								csrf.csrfTokenRequestHandler(requestHandler)
-										.ignoringRequestMatchers("/api/v1/auth/register", "/api/v1/auth/login")
-										.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse()))
+				.csrf()
+				.disable()
 				.authorizeHttpRequests()
-				.requestMatchers(
-						"/api/v1/auth/register",
-						"/api/v1/auth/login",
-						"/api/v1/auth/getEndPointsByRoles",
-						"/api/v1/auth/v3/api-docs",
-						"/api/v1/auth/swagger-ui.html")
-				.permitAll()
 				.anyRequest()
-				.authenticated()
+				.permitAll()
 				.and()
-				.httpBasic()
-				.and()
-				.oauth2Login()
-				.userInfoEndpoint()
-				.userService(oauth2UserService)
-				.and()
-				.successHandler(oauthLoginSuccessHandler);
+				.httpBasic();
 
 		return httpSecurity.build();
 	}

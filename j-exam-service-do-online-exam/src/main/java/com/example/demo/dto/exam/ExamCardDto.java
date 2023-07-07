@@ -22,7 +22,6 @@ public class ExamCardDto {
 	private String categoryName;
 	private Long downloadNumber;
 
-
 	public ExamCardDto(Exam exam) {
 		this.id = exam.getId();
 		this.examType = exam.getExamType();
