@@ -23,4 +23,10 @@ public interface ExamRepository extends JpaRepository<Exam, Long>, AbstractRepos
 					"SELECT * FROM (SELECT *,ROW_NUMBER() OVER (PARTITION BY category_id ORDER BY id) AS row_num FROM tbl_exams WHERE exam_type NOT LIKE '%PRIVATE%') AS subquery WHERE row_num <= 5",
 			nativeQuery = true)
 	List<Exam> fetchExamByCategory();
+
+	@Query(
+			value =
+					"SELECT * FROM tbl_exams where exam_name <> :name AND exam_type NOT LIKE '%PRIVATE%' ORDER BY RANDOM() LIMIT 3",
+			nativeQuery = true)
+	List<Exam> getRandomExams(String name);
 }

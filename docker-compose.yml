@@ -1,6 +1,38 @@
 version: '3'
 
 services:
+  eureka-server:
+    container_name: eureka-server
+    build: ./j-eureka-server-do-online-exam
+    restart: always
+    networks:
+      - do-online-network
+    ports:
+      - '8761:8761'
+  gateway-service:
+    container_name: gateway-service
+    build: ./j-gateway-do-online-exam
+    restart: always
+    networks:
+      - do-online-network
+    ports:
+      - '8763:8763'
+    environment:
+      - EUREKA_URL=http://eureka-service:8761/eureka
+    links:
+      - "eureka-server"
+    depends_on:
+      - eureka-server
+  authorization-service:
+    container_name: authorization-service
+    build: ./j-auth-service-do-online-exam
+    restart: always
+    networks:
+      - do-online-network
+    ports:
+      - '8764:8764'
+    environment:
+      - EUREKA_URL=http://eureka-service:8761/eureka
   postgresDB:
     image: postgres:14.1-alpine
     container_name: do-online-exam-postgres-db

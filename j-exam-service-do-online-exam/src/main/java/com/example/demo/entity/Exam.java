@@ -36,7 +36,7 @@ public class Exam {
 	@Column(columnDefinition = "bigint default 0", name = "download_number")
 	private long downloadNumber;
 
-	@Column(name = "description")
+	@Column(name = "description", columnDefinition = "TEXT")
 	private String description;
 
 	@Column(name = "category_id", nullable = false)

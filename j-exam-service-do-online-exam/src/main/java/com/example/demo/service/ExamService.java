@@ -84,7 +84,8 @@ public class ExamService {
 
 	@Autowired private ResultRepository resultRepository;
 
-	// TODO: need check
+	@Autowired private FeedbackService feedbackService;
+
 	public ResponseEntity<?> getAllExam(
 			QuerySearchCommand command, String token, String name, String category_ids, String duration)
 			throws JsonProcessingException, ExecuteSQLException, InvalidDateFormatException {
@@ -98,7 +99,7 @@ public class ExamService {
 						.operation(NOT_LIKE_OPERATOR)
 						.build());
 
-		if ((token != null && !JwtTokenUtil.getTokenWithoutBearer(token).equals("null"))) {
+		if (token != null && !JwtTokenUtil.getTokenWithoutBearer(token).equals("null")) {
 			Long userID =
 					Long.valueOf(
 							JwtTokenUtil.getUserInfoFromToken(
@@ -178,7 +179,14 @@ public class ExamService {
 
 		List<Exam> exams = (List<Exam>) result.get(DATA_KEY);
 
-		var examCardDto = exams.stream().map(ExamCardDto::new).toList();
+		var examCardDto =
+				exams.stream()
+						.map(
+								exam -> {
+									var rating = feedbackService.calculateRatingExam(exam.getId());
+									return new ExamCardDto(exam, rating.getTotalRating());
+								})
+						.toList();
 
 		result.put(DATA_KEY, examCardDto);
 
@@ -222,11 +230,12 @@ public class ExamService {
 		Map<String, List<ExamCardDto>> result = new HashMap<>();
 		var query = examRepository.fetchExamByCategory();
 		for (Exam ex : query) {
+			var rating = feedbackService.calculateRatingExam(ex.getId());
 			if (result.containsKey(ex.getCategoryName())) {
-				result.get(ex.getCategoryName()).add(new ExamCardDto(ex));
+				result.get(ex.getCategoryName()).add(new ExamCardDto(ex, rating.getTotalRating()));
 			} else {
 				List<ExamCardDto> examsDto = new ArrayList<>();
-				examsDto.add(new ExamCardDto(ex));
+				examsDto.add(new ExamCardDto(ex, rating.getTotalRating()));
 				result.put(ex.getCategoryName(), examsDto);
 			}
 		}
@@ -414,7 +423,8 @@ public class ExamService {
 				return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, exam));
 			}
 		} else if (flag) {
-			var examCardDto = new ExamCardDto(examOpt.get());
+			var rating = feedbackService.calculateRatingExam(examOpt.get().getId());
+			var examCardDto = new ExamCardDto(examOpt.get(), rating.getTotalRating());
 
 			return GenerateResponseHelper.generateDataResponse(
 					HttpStatus.OK, Map.of(DATA_KEY, examCardDto));
@@ -1070,7 +1080,7 @@ public class ExamService {
 	public ResponseEntity<?> getExamEdit(String token, Long id) throws JsonProcessingException {
 		Optional<Exam> examOpt = examRepository.findById(id);
 		if (examOpt.isEmpty()) {
-			GenerateResponseHelper.generateMessageResponse(
+			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
 		}
 
@@ -1094,5 +1104,27 @@ public class ExamService {
 
 		return GenerateResponseHelper.generateMessageResponse(
 				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
+	}
+
+	public ResponseEntity<?> getRandomExams(String name) {
+		Optional<Exam> examOpt = examRepository.findExamByExamName(name);
+		if (examOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_EXAM_INFORMATION));
+		}
+
+		var exams = examRepository.getRandomExams(name);
+
+		return GenerateResponseHelper.generateDataResponse(
+				HttpStatus.OK,
+				Map.of(
+						DATA_KEY,
+						exams.stream()
+								.map(
+										exam -> {
+											var rating = feedbackService.calculateRatingExam(exam.getId());
+											return new ExamCardDto(exam, rating.getTotalRating());
+										})
+								.collect(Collectors.toList())));
 	}
 }

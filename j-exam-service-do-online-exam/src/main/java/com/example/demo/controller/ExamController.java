@@ -63,6 +63,11 @@ public class ExamController {
 		return examService.getExamsOption(token);
 	}
 
+	@GetMapping("/random")
+	public ResponseEntity<?> getRandomExams(@RequestParam("name") String name) {
+		return examService.getRandomExams(name);
+	}
+
 	@GetMapping("/fetch")
 	public ResponseEntity<?> fetchExamByName(
 			@RequestHeader("Authorization") String token, @RequestParam("name") String name)
