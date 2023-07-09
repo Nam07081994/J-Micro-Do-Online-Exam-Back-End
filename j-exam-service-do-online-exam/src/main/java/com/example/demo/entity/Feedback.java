@@ -1,19 +1,9 @@
 package com.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -33,14 +23,21 @@ public class Feedback {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "comment", nullable = false)
+	@Column(name = "comment", nullable = false, columnDefinition = "TEXT")
 	private String comment;
 
 	@Column(name = "vote_number")
 	private Integer voteNumber;
 
+	@Column(name = "user_id", nullable = false)
+	private Long userID;
+
+	private String username;
+
 	@Column(name = "exam_id", nullable = false)
 	private Long examId;
+
+	private String examName;
 
 	@Column(name = "created_by")
 	@CreatedBy

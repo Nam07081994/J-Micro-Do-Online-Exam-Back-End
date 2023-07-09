@@ -2,7 +2,7 @@
 server:
   servlet:
     context-path: /
-  port: 8763
+  port: ${PORT:8763}
 redis:
   host: localhost
   port: 6379
@@ -15,11 +15,11 @@ eureka:
     register-with-eureka: true
     fetch-registry: true
     service-url:
-      default-zone: http://localhost:8761/eureka/
+      default-zone: ${EUREKA_URL:http://localhost:8761/eureka/}
     enabled: true
 #spring config
 spring:
-  application.name: gate-way
+  application.name: gateway-service
 #config connect to redis
   data:
     redis:
@@ -98,11 +98,11 @@ spring:
                   reset-timeout: 5000
             - name: AuthenticationFilter
           #config rate limiter filter
-            - name: RequestRateLimiter
-              args:
-                key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 2
-                redis-rate-limiter.burstCapacity: 2
+#            - name: RequestRateLimiter
+#              args:
+#                key-resolver: "#{@userKeyResolver}"
+#                redis-rate-limiter.replenishRate: 2
+#                redis-rate-limiter.burstCapacity: 2
 #-------------------------------------------------------------------------------
         - id: file-service
           uri: http://localhost:8766/
@@ -122,12 +122,12 @@ spring:
                   fallback-uri: forward:/api/v1/circuit-breaker/fallback
                   reset-timeout: 5000
             - name: AuthenticationFilter
-          #config rate limiter filter
-            - name: RequestRateLimiter
-              args:
-                key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 2
-                redis-rate-limiter.burstCapacity: 2
+#          #config rate limiter filter
+#            - name: RequestRateLimiter
+#              args:
+#                key-resolver: "#{@userKeyResolver}"
+#                redis-rate-limiter.replenishRate: 2
+#                redis-rate-limiter.burstCapacity: 2
 #-------------------------------------------------------------------------------
         - id: article-service
           uri: http://localhost:8767/

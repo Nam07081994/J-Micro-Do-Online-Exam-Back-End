@@ -19,15 +19,17 @@ public class ExamCardDto {
 	private String examType;
 	private Integer duration;
 	private String description;
+	private double totalRating;
 	private String categoryName;
 	private Long downloadNumber;
 
-	public ExamCardDto(Exam exam) {
+	public ExamCardDto(Exam exam, double totalRating) {
 		this.id = exam.getId();
-		this.examType = exam.getExamType();
+		this.totalRating = totalRating;
 		this.image = exam.getThumbnail();
 		this.duration = exam.getDuration();
 		this.examName = exam.getExamName();
+		this.examType = exam.getExamType();
 		this.categoryID = exam.getCategoryId();
 		this.description = exam.getDescription();
 		this.categoryName = exam.getCategoryName();
