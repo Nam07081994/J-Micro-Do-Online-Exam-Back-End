@@ -134,7 +134,7 @@ public class CategoryService {
 
 	public ResponseEntity<?> updateCategoryInfo(Long id, String name) {
 		var categoryCheck = categoryRepository.findById(id);
-		if (categoryCheck.isPresent()) {
+		if (categoryCheck.isEmpty()) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST,
 					translationService.getTranslation(NOT_FOUND_CATEGORY_INFORMATION));
