@@ -58,5 +58,7 @@ services:
     container_name: "polar-redis"
     ports:
       - "50988:6379"
+networks:
+  do-online-network:
 volumes:
-  data: {}
+  data: { }

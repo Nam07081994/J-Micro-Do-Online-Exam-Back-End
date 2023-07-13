@@ -1,9 +1,5 @@
 package com.example.demo.service;
 
-import static com.example.demo.constant.StringConstant.DATA_KEY;
-import static com.example.demo.constant.StringConstant.ROLE_NAME_KEY;
-import static com.example.demo.constant.TranslationCodeConstant.FROM_DATE_TO_DATE_INVALID;
-
 import com.example.demo.command.CommonSearchCommand;
 import com.example.demo.command.RoleCommand;
 import com.example.demo.common.query.QueryCondition;
@@ -17,148 +13,189 @@ import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.repository.AbstractRepositoryImpl;
 import com.example.demo.repository.RoleRepository;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static com.example.demo.constant.StringConstant.*;
+import static com.example.demo.constant.TranslationCodeConstant.FROM_DATE_TO_DATE_INVALID;
+import static com.example.demo.constant.TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION;
+
 @Service
-@AllArgsConstructor
 @EnableTransactionManagement
 public class RoleService {
 
-	private RoleRepository roleRepository;
+    @Value("${app.restrict-element.roles}")
+    private String RESTRICT_ROLES;
 
-	private EndPointService endPointService;
+    @Autowired
+    private RoleRepository roleRepository;
 
-	private TranslationService translationService;
+    @Autowired
+    private EndPointService endPointService;
 
-	private AbstractRepositoryImpl<Role> abstractRepository;
+    @Autowired
+    private TranslationService translationService;
 
-	public ResponseEntity<?> getRoles(CommonSearchCommand command, String name)
-			throws ExecuteSQLException, InvalidDateFormatException {
-		Map<String, QueryCondition> searchParams = new HashMap<>();
+    @Autowired
+    private AbstractRepositoryImpl<Role> abstractRepository;
 
-		if (!StringUtils.isEmpty(name)) {
-			searchParams.put(
-					ROLE_NAME_KEY,
-					QueryCondition.builder().operation(StringConstant.LIKE_OPERATOR).value(name).build());
-		}
+    public ResponseEntity<?> getRoles(CommonSearchCommand command, String name)
+            throws ExecuteSQLException, InvalidDateFormatException {
+        Map<String, QueryCondition> searchParams = new HashMap<>();
 
-		if (QueryDateCondition.generate(command, searchParams))
-			return GenerateResponseHelper.generateMessageResponse(
-					HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
+        if (!StringUtils.isEmpty(name)) {
+            searchParams.put(
+                    ROLE_NAME_KEY,
+                    QueryCondition.builder().operation(StringConstant.LIKE_OPERATOR).value(name).build());
+        }
 
-		var result =
-				abstractRepository.search(
-						searchParams,
-						command.getOrder_by(),
-						command.getPage_size(),
-						command.getPage_index(),
-						Role.class);
+        if (QueryDateCondition.generate(command, searchParams))
+            return GenerateResponseHelper.generateMessageResponse(
+                    HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
 
-		List<Role> roles = (List<Role>) result.get(DATA_KEY);
-		result.put(DATA_KEY, roles.stream().map(RoleDto::new).collect(Collectors.toList()));
+        var result =
+                abstractRepository.search(
+                        searchParams,
+                        command.getOrder_by(),
+                        command.getPage_size(),
+                        command.getPage_index(),
+                        Role.class);
 
-		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
-	}
+        List<Role> roles = (List<Role>) result.get(DATA_KEY);
+        result.put(DATA_KEY, roles.stream().map(RoleDto::new).collect(Collectors.toList()));
 
-	@Transactional
-	public ResponseEntity<?> makeRole(RoleCommand command) {
-		Optional<Role> roleOpt = roleRepository.findByRoleName(command.getName());
-		if (roleOpt.isPresent()) {
-			return GenerateResponseHelper.generateMessageResponse(
-					HttpStatus.BAD_REQUEST,
-					translationService.getTranslation(TranslationCodeConstant.ROLE_NAME_EXIST));
-		}
+        return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
+    }
 
-		for (Long endPointID : command.getEndPoint()) {
-			if (!validateEndpoint(endPointID)) {
-				return GenerateResponseHelper.generateMessageResponse(
-						HttpStatus.BAD_REQUEST,
-						translationService.getTranslation(
-								TranslationCodeConstant.NOT_FOUND_ENDPOINT_INFORMATION));
-			}
-		}
-		Role newRole =
-				Role.builder().roleName(command.getName()).endPoint(command.getEndPoint()).build();
-		roleRepository.save(newRole);
+    @Transactional
+    public ResponseEntity<?> makeRole(RoleCommand command) {
+        Optional<Role> roleOpt = roleRepository.findByRoleName(command.getName());
+        if (roleOpt.isPresent()) {
+            return GenerateResponseHelper.generateMessageResponse(
+                    HttpStatus.BAD_REQUEST,
+                    translationService.getTranslation(TranslationCodeConstant.ROLE_NAME_EXIST));
+        }
 
-		return GenerateResponseHelper.generateMessageResponse(
-				HttpStatus.OK,
-				translationService.getTranslation(TranslationCodeConstant.SAVE_ROLE_INFORMATION_SUCCESS));
-	}
+        for (Long endPointID : command.getEndPoint()) {
+            if (!validateEndpoint(endPointID)) {
+                return GenerateResponseHelper.generateMessageResponse(
+                        HttpStatus.BAD_REQUEST,
+                        translationService.getTranslation(
+                                TranslationCodeConstant.NOT_FOUND_ENDPOINT_INFORMATION));
+            }
+        }
+        Role newRole =
+                Role.builder().roleName(command.getName()).endPoint(command.getEndPoint()).build();
+        roleRepository.save(newRole);
 
-	@Transactional
-	public ResponseEntity<?> editRole(RoleCommand command, Long id) {
-		Optional<Role> roleOptById = roleRepository.findById(id);
-		if (roleOptById.isEmpty()) {
-			return GenerateResponseHelper.generateMessageResponse(
-					HttpStatus.BAD_REQUEST,
-					translationService.getTranslation(TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION));
-		}
+        return GenerateResponseHelper.generateMessageResponse(
+                HttpStatus.OK,
+                translationService.getTranslation(TranslationCodeConstant.SAVE_ROLE_INFORMATION_SUCCESS));
+    }
 
-		Optional<Role> roleOptByName = roleRepository.findByRoleName(command.getName());
-		if (!roleOptById.get().getRoleName().equals(command.getName()) && roleOptByName.isPresent()) {
-			return GenerateResponseHelper.generateMessageResponse(
-					HttpStatus.BAD_REQUEST,
-					translationService.getTranslation(TranslationCodeConstant.ROLE_NAME_EXIST));
-		}
+    @Transactional
+    public ResponseEntity<?> editRole(RoleCommand command, Long id) {
+        Optional<Role> roleOptById = roleRepository.findById(id);
+        if (roleOptById.isEmpty()) {
+            return GenerateResponseHelper.generateMessageResponse(
+                    HttpStatus.BAD_REQUEST,
+                    translationService.getTranslation(TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION));
+        }
 
-		for (Long endPointID : command.getEndPoint()) {
-			if (!validateEndpoint(endPointID)) {
-				return GenerateResponseHelper.generateMessageResponse(
-						HttpStatus.BAD_REQUEST,
-						translationService.getTranslation(
-								TranslationCodeConstant.NOT_FOUND_ENDPOINT_INFORMATION));
-			}
-		}
+        Optional<Role> roleOptByName = roleRepository.findByRoleName(command.getName());
+        if (!roleOptById.get().getRoleName().equals(command.getName()) && roleOptByName.isPresent()) {
+            return GenerateResponseHelper.generateMessageResponse(
+                    HttpStatus.BAD_REQUEST,
+                    translationService.getTranslation(TranslationCodeConstant.ROLE_NAME_EXIST));
+        }
 
-		roleOptById.get().setRoleName(command.getName());
-		roleOptById.get().setEndPoint(command.getEndPoint());
-		roleRepository.save(roleOptById.get());
+        for (Long endPointID : command.getEndPoint()) {
+            if (!validateEndpoint(endPointID)) {
+                return GenerateResponseHelper.generateMessageResponse(
+                        HttpStatus.BAD_REQUEST,
+                        translationService.getTranslation(
+                                TranslationCodeConstant.NOT_FOUND_ENDPOINT_INFORMATION));
+            }
+        }
 
-		return GenerateResponseHelper.generateMessageResponse(
-				HttpStatus.OK,
-				translationService.getTranslation(TranslationCodeConstant.EDIT_ROLE_INFORMATION_SUCCESS));
-	}
+        roleOptById.get().setRoleName(command.getName());
+        roleOptById.get().setEndPoint(command.getEndPoint());
+        if (roleOptById.get().getRoleName().equals(USER_ROLE_STRING)) {
+            Optional<Role> premiumRole = roleRepository.findByRoleName(USER_PREMIUM_ROLE_STRING);
+            if (premiumRole.isEmpty()) {
+                return GenerateResponseHelper.generateMessageResponse(
+                        HttpStatus.BAD_REQUEST,
+                        translationService.getTranslation(TranslationCodeConstant.ROLE_NAME_EXIST));
+            }
 
-	private boolean validateEndpoint(Long id) {
-		return endPointService.checkEndpointExist(id);
-	}
+            premiumRole.get().setEndPoint(command.getEndPoint());
+            roleRepository.save(premiumRole.get());
+        }
 
-	public ResponseEntity<?> getRoleByName(String name) {
-		Optional<Role> roleOpt = roleRepository.findByRoleName(name);
-		if (roleOpt.isEmpty()) {
-			return GenerateResponseHelper.generateMessageResponse(
-					HttpStatus.BAD_REQUEST,
-					translationService.getTranslation(TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION));
-		}
+        roleRepository.save(roleOptById.get());
 
-		return GenerateResponseHelper.generateDataResponse(
-				HttpStatus.OK, Map.of(StringConstant.DATA_KEY, new RoleDto(roleOpt.get())));
-	}
+        return GenerateResponseHelper.generateMessageResponse(
+                HttpStatus.OK,
+                translationService.getTranslation(TranslationCodeConstant.EDIT_ROLE_INFORMATION_SUCCESS));
+    }
 
-	public ResponseEntity<?> getEndpointsByRole(Long id) {
-		Optional<Role> roleOpt = roleRepository.findById(id);
-		if (roleOpt.isEmpty()) {
-			return GenerateResponseHelper.generateMessageResponse(
-					HttpStatus.BAD_REQUEST,
-					translationService.getTranslation(TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION));
-		}
+    private boolean validateEndpoint(Long id) {
+        return endPointService.checkEndpointExist(id);
+    }
 
-		return GenerateResponseHelper.generateDataResponse(
-				HttpStatus.OK,
-				Map.of(
-						StringConstant.DATA_KEY,
-						endPointService.getEndPointsByRole(roleOpt.get().getEndPoint())));
-	}
+    public ResponseEntity<?> getRoleByName(String name) {
+        Optional<Role> roleOpt = roleRepository.findByRoleName(name);
+        if (roleOpt.isEmpty()) {
+            return GenerateResponseHelper.generateMessageResponse(
+                    HttpStatus.BAD_REQUEST,
+                    translationService.getTranslation(TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION));
+        }
+
+        return GenerateResponseHelper.generateDataResponse(
+                HttpStatus.OK, Map.of(StringConstant.DATA_KEY, new RoleDto(roleOpt.get())));
+    }
+
+    public ResponseEntity<?> getEndpointsByRole(Long id) {
+        Optional<Role> roleOpt = roleRepository.findById(id);
+        if (roleOpt.isEmpty()) {
+            return GenerateResponseHelper.generateMessageResponse(
+                    HttpStatus.BAD_REQUEST,
+                    translationService.getTranslation(TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION));
+        }
+
+        return GenerateResponseHelper.generateDataResponse(
+                HttpStatus.OK,
+                Map.of(
+                        StringConstant.DATA_KEY,
+                        endPointService.getEndPointsByRole(roleOpt.get().getEndPoint())));
+    }
+
+    public ResponseEntity<?> softDeleteRole(Long id) {
+        Optional<Role> roleOpt = roleRepository.findById(id);
+        if (roleOpt.isEmpty()) {
+            return GenerateResponseHelper
+                    .generateMessageResponse(HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_ROLE_INFORMATION));
+        }
+
+        if (RESTRICT_ROLES.contains(roleOpt.get().getRoleName())) {
+            return GenerateResponseHelper
+                    .generateMessageResponse(HttpStatus.BAD_REQUEST, roleOpt.get().getRoleName() + " can not be deleted");
+        }
+
+        roleRepository.deleteById(id);
+
+        return GenerateResponseHelper.generateMessageResponse(HttpStatus.OK, "Delete role successfully");
+    }
 }
