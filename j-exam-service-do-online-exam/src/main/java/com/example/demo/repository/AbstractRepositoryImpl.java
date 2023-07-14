@@ -46,8 +46,8 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 			}
 
 			if (!orParams.isEmpty()) {
-				query.append(ORDER_STATEMENT);
-				queryCount.append(ORDER_STATEMENT);
+				query.append(OR_STATEMENT);
+				queryCount.append(OR_STATEMENT);
 				String orStatement =
 						orParams.keySet().stream()
 								.map(s -> "c. " + s + SPACE_STRING + orParams.get(s).getOperation() + " :" + s)

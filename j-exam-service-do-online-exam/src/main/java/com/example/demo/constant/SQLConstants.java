@@ -35,6 +35,8 @@ public class SQLConstants {
 
 	public static final String ORDER_STATEMENT = " ORDER BY ";
 
+	public static final String OR_STATEMENT = " OR ";
+
 	public static final String LIKE_OPERATOR = "LIKE";
 
 	public static final String NOT_LIKE_OPERATOR = "NOT LIKE";
