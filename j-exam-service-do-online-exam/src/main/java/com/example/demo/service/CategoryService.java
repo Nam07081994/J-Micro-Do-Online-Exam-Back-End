@@ -57,14 +57,13 @@ public class CategoryService {
 					CATEGORY_NAME_KEY, QueryCondition.builder().operation(LIKE_OPERATOR).value(name).build());
 		}
 
-		if (QueryDateCondition.generate(command, searchParams))
+		if (QueryDateCondition.generate(command, searchParams, null))
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
 
 		var result =
 				categoryRepository.search(
 						searchParams,
-						Map.of(),
 						command.getOrder_by(),
 						command.getPage_size(),
 						command.getPage_index(),

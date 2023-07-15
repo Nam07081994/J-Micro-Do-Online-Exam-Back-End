@@ -89,9 +89,10 @@ public class ExamService {
 	public ResponseEntity<?> getAllExam(
 			QuerySearchCommand command, String token, String name, String category_ids, String duration)
 			throws JsonProcessingException, ExecuteSQLException, InvalidDateFormatException {
-		Map<String, QueryCondition> orParams = new HashMap<>();
 		Map<String, QueryCondition> searchParams = new HashMap<>();
+		List<String> keyParams = new ArrayList<>();
 
+		Boolean flag = false;
 		searchParams.put(
 				EXAM_TYPE_SEARCH_KEY,
 				QueryCondition.builder()
@@ -113,14 +114,21 @@ public class ExamService {
 						HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
 			}
 
-			if (userRoles.contains(ADMIN_ROLE)) {
-				searchParams.remove(EXAM_TYPE_SEARCH_KEY);
-			}
+			searchParams.remove(EXAM_TYPE_SEARCH_KEY);
 
 			if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
-				orParams.put(
+				searchParams.put(
+						EXAM_TYPE_SEARCH_KEY,
+						QueryCondition.builder()
+								.value(List.of("PREMIUM", "FREE"))
+								.operation(IN_OPERATOR)
+								.build());
+				flag = true;
+				searchParams.put(
 						EXAM_OWNER_ID_SEARCH_KEY,
 						QueryCondition.builder().value(userID).operation(EQUAL_OPERATOR).build());
+				keyParams.add(EXAM_TYPE_SEARCH_KEY);
+				keyParams.add(EXAM_OWNER_ID_SEARCH_KEY);
 			}
 		}
 
@@ -128,6 +136,7 @@ public class ExamService {
 			searchParams.put(
 					EXAM_NAME_SEARCH_KEY,
 					QueryCondition.builder().value(name).operation(LIKE_OPERATOR).build());
+			keyParams.add(EXAM_NAME_SEARCH_KEY);
 		}
 
 		if (!StringUtils.isEmpty(category_ids)) {
@@ -148,6 +157,7 @@ public class ExamService {
 								.operation(IN_OPERATOR)
 								.build());
 			}
+			keyParams.add(EXAM_CATEGORY_NAME_SEARCH_KEY);
 		}
 
 		if (!StringUtils.isEmpty(duration)) {
@@ -159,23 +169,36 @@ public class ExamService {
 								.value(Arrays.stream(arrDurations).map(sx -> Integer.parseInt(sx.trim())).toList())
 								.operation(IN_OPERATOR)
 								.build());
+				keyParams.add(EXAM_DURATION_SEARCH_KEY);
 			} catch (Exception ex) {
 				GenerateResponseHelper.generateMessageResponse(HttpStatus.BAD_REQUEST, EXECUTE_SQL_ERROR);
 			}
 		}
 
-		if (QueryDateCondition.generate(command, searchParams))
+		if (QueryDateCondition.generate(command, searchParams, keyParams)) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
+		}
 
-		var result =
-				examRepository.search(
-						searchParams,
-						orParams,
-						command.getOrder_by(),
-						command.getPage_size(),
-						command.getPage_index(),
-						Exam.class);
+		Map<String, Object> result;
+		if (flag) {
+			result =
+					examRepository.searchWithUnion(
+							searchParams,
+							keyParams,
+							command.getOrder_by(),
+							command.getPage_size(),
+							command.getPage_index(),
+							Exam.class);
+		} else {
+			result =
+					examRepository.search(
+							searchParams,
+							command.getOrder_by(),
+							command.getPage_size(),
+							command.getPage_index(),
+							Exam.class);
+		}
 
 		List<Exam> exams = (List<Exam>) result.get(DATA_KEY);
 
@@ -193,7 +216,6 @@ public class ExamService {
 		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, result);
 	}
 
-	// TODO: need check
 	public ResponseEntity<?> getExamsOption(String token) throws JsonProcessingException {
 		Long userID =
 				Long.valueOf(
@@ -225,7 +247,6 @@ public class ExamService {
 				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_HAVE_EXAM_OPTIONS));
 	}
 
-	// TODO: need check
 	public ResponseEntity<?> fetchExamByCategory() {
 		Map<String, List<ExamCardDto>> result = new HashMap<>();
 		var query = examRepository.fetchExamByCategory();
@@ -243,7 +264,6 @@ public class ExamService {
 		return GenerateResponseHelper.generateDataResponse(HttpStatus.OK, Map.of(DATA_KEY, result));
 	}
 
-	// TODO: need check
 	@Transactional
 	public ResponseEntity<?> createExam(CreateExamCommand command, String token) throws IOException {
 		ObjectMapper objectMapper = new ObjectMapper();
@@ -822,7 +842,6 @@ public class ExamService {
 		}
 	}
 
-	// TODO: need test
 	public ResponseEntity<?> checkExam(String token, SubmitExamCommand command)
 			throws JsonProcessingException {
 		// TODO handle save history exam
@@ -887,7 +906,6 @@ public class ExamService {
 				HttpStatus.OK, translationService.getTranslation(SUBMIT_EXAM_SUCCESS));
 	}
 
-	// TODO: need test
 	@Transactional
 	public ResponseEntity<?> deleteExam(Long id, String token) throws JsonProcessingException {
 		String userRoles =
@@ -929,7 +947,6 @@ public class ExamService {
 				HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_ALLOW_REMOVE_EXAM));
 	}
 
-	// TODO: need test
 	@Transactional
 	public ResponseEntity<?> editExam(String token, EditExamCommand command)
 			throws JsonProcessingException {
@@ -944,8 +961,8 @@ public class ExamService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(EXAM_IS_BEING_USE));
 		}
 
-		String userRoles = JwtTokenUtil.getUserInfoFromToken(token, USER_ROLES_TOKEN_KEY);
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(token, USER_ID_TOKEN_KEY));
+		String userRoles = JwtTokenUtil.getUserInfoFromToken(JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
 		if ((userRoles.contains(ADMIN_ROLE)
 						&& !examOpt.get().getExamType().equals(ExamType.PRIVATE.name()))
@@ -1076,7 +1093,6 @@ public class ExamService {
 				HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
 	}
 
-	// TODO: need test
 	public ResponseEntity<?> getExamEdit(String token, Long id) throws JsonProcessingException {
 		Optional<Exam> examOpt = examRepository.findById(id);
 		if (examOpt.isEmpty()) {
