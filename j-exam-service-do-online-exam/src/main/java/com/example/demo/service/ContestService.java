@@ -81,14 +81,13 @@ public class ContestService {
 					QueryCondition.builder().value(name).operation(LIKE_OPERATOR).build());
 		}
 
-		if (QueryDateCondition.generate(command, searchParams))
+		if (QueryDateCondition.generate(command, searchParams, null))
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(FROM_DATE_TO_DATE_INVALID));
 
 		var result =
 				contestRepository.search(
 						searchParams,
-						Map.of(),
 						command.getOrder_by(),
 						command.getPage_size(),
 						command.getPage_index(),

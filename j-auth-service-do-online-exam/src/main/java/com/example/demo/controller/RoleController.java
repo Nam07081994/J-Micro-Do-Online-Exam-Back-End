@@ -54,7 +54,7 @@ public class RoleController {
 	}
 
 	@DeleteMapping("/delete")
-	public ResponseEntity<?> deleteRole(@RequestParam("id") Long id){
+	public ResponseEntity<?> deleteRole(@RequestParam("id") Long id) {
 		return roleService.softDeleteRole(id);
 	}
 }

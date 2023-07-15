@@ -7,6 +7,7 @@ import com.example.demo.exceptions.InvalidDateFormatException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,7 +23,7 @@ public class QueryDateCondition {
 	}
 
 	public static boolean generate(
-			QuerySearchCommand command, Map<String, QueryCondition> searchParams)
+			QuerySearchCommand command, Map<String, QueryCondition> searchParams, List<String> arrKey)
 			throws InvalidDateFormatException {
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DEFAULT_DATE_FORMAT);
 		try {
@@ -35,22 +36,39 @@ public class QueryDateCondition {
 				}
 			}
 
-			if (!StringUtils.isEmpty(command.getFrom_date())) {
+			if (!StringUtils.isEmpty(command.getFrom_date())
+					&& !StringUtils.isEmpty(command.getTo_date())) {
+				searchParams.put(
+						CREATED_AT_KEY,
+						QueryCondition.builder()
+								.value(LocalDateTime.parse(command.getFrom_date(), formatter))
+								.value2(LocalDateTime.parse(command.getTo_date(), formatter))
+								.operation(BETWEEN_OPERATOR)
+								.build());
+				if (arrKey != null) {
+					arrKey.add(CREATED_AT_KEY);
+				}
+
+			} else if (!StringUtils.isEmpty(command.getFrom_date())) {
 				searchParams.put(
 						CREATED_AT_KEY,
 						QueryCondition.builder()
 								.value(LocalDateTime.parse(command.getFrom_date(), formatter))
 								.operation(GREATER_THAN_OPERATION)
 								.build());
-			}
-
-			if (!StringUtils.isEmpty(command.getTo_date())) {
+				if (arrKey != null) {
+					arrKey.add(CREATED_AT_KEY);
+				}
+			} else if (!StringUtils.isEmpty(command.getTo_date())) {
 				searchParams.put(
 						CREATED_AT_KEY,
 						QueryCondition.builder()
 								.operation(LESS_THAN_OPERATOR)
 								.value(LocalDateTime.parse(command.getTo_date(), formatter))
 								.build());
+				if (arrKey != null) {
+					arrKey.add(CREATED_AT_KEY);
+				}
 			}
 		} catch (DateTimeParseException ex) {
 			throw new InvalidDateFormatException(

@@ -140,8 +140,7 @@ public class FeedbackService {
 		searchParams.put(
 				"examName", QueryCondition.builder().value(name).operation(EQUAL_OPERATOR).build());
 
-		var result =
-				feedbackRepository.search(searchParams, Map.of(), EMPTY_STRING, 10, 1, Feedback.class);
+		var result = feedbackRepository.search(searchParams, EMPTY_STRING, 10, 1, Feedback.class);
 
 		var feedbacks = (List<Feedback>) result.get(DATA_KEY);
 		result.put(DATA_KEY, feedbacks.stream().map(FeedbackDto::new).collect(Collectors.toList()));
