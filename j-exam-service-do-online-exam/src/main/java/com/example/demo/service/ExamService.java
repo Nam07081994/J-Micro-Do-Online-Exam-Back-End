@@ -967,6 +967,14 @@ public class ExamService {
 		if ((userRoles.contains(ADMIN_ROLE)
 						&& !examOpt.get().getExamType().equals(ExamType.PRIVATE.name()))
 				|| (userID.compareTo(examOpt.get().getOwnerId()) == 0)) {
+
+			if(userRoles.contains(ADMIN_ROLE)){
+				if(userID.compareTo(examOpt.get().getOwnerId()) != 0){
+					return GenerateResponseHelper.generateMessageResponse(
+							HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
+				}
+			}
+
 			Optional<Category> categoryOpt = categoryRepository.findById(command.getCategoryId());
 			if (categoryOpt.isEmpty()) {
 				return GenerateResponseHelper.generateMessageResponse(
@@ -976,6 +984,7 @@ public class ExamService {
 
 			if (command.getCategoryId().compareTo(examOpt.get().getCategoryId()) != 0) {
 				examOpt.get().setCategoryId(command.getCategoryId());
+				examOpt.get().setCategoryName(categoryOpt.get().getCategoryName());
 			}
 
 			if (!Objects.equals(command.getDuration(), examOpt.get().getDuration())) {
