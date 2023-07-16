@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ExamCardDto {
 	private Long id;
+	private Long ownerID;
 	private String image;
 	private Long categoryID;
 	private String createAt;
@@ -25,6 +26,7 @@ public class ExamCardDto {
 
 	public ExamCardDto(Exam exam, double totalRating) {
 		this.id = exam.getId();
+		this.ownerID = exam.getOwnerId();
 		this.totalRating = totalRating;
 		this.image = exam.getThumbnail();
 		this.duration = exam.getDuration();

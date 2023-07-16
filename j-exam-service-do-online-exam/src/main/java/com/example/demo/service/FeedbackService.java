@@ -92,7 +92,7 @@ public class FeedbackService {
 	}
 
 	public ResponseEntity<?> getFeedbackByExamName(
-			String token, String name, int vote, int pageSize, int pageIndex)
+			String token, String name, int vote, int pageIndex, int pageSize)
 			throws JsonProcessingException, ExecuteSQLException {
 		if (StringUtils.isEmpty(name)) {
 			return GenerateResponseHelper.generateMessageResponse(
@@ -250,9 +250,9 @@ public class FeedbackService {
 		Map<Integer, Float> ratingData = new HashMap<>();
 		Integer totalVote = 0;
 		List<Feedback> feedbacks = feedbackRepository.findAllByExamId(id);
+		var stars = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
+		var starsValue = new ArrayList<>(Arrays.asList(0f, 0f, 0f, 0f, 0f));
 		if (feedbacks.size() == 0) {
-			var stars = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
-			var starsValue = new ArrayList<>(Arrays.asList(0f, 0f, 0f, 0f, 0f));
 			return RatingDto.builder()
 					.ranking("Not yet")
 					.ratingData(new StarDto(stars, starsValue))
@@ -270,8 +270,13 @@ public class FeedbackService {
 			}
 		}
 
-		for (Map.Entry<Integer, Float> entry : ratingData.entrySet()) {
-			ratingData.put(entry.getKey(), entry.getValue() / totalVote * 100);
+		for(int num : stars){
+			if(ratingData.containsKey(num)){
+				var timeOccur = ratingData.get(num);
+				ratingData.put(num,timeOccur * num / totalVote * 100);
+			}else{
+				ratingData.put(num,0f);
+			}
 		}
 
 		var totalRating = totalVote / feedbacks.size();
