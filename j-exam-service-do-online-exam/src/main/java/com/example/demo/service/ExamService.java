@@ -1094,7 +1094,7 @@ public class ExamService {
                 examRepository.save(examOpt.get());
 
                 return GenerateResponseHelper
-                        .generateMessageResponse(HttpStatus.OK,translationService.getTranslation(UPDATE))
+                        .generateMessageResponse(HttpStatus.OK,translationService.getTranslation(UPDATE_EXAM_THUMBNAIL_SUCCESS));
 
 			} catch (Exception ex) {
 				return GenerateResponseHelper.generateMessageResponse(
