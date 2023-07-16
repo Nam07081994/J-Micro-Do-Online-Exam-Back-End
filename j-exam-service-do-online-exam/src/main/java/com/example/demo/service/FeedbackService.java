@@ -74,11 +74,16 @@ public class FeedbackService {
 		if (userRoles.contains(USER_EXAM_ROLE)) {
 			newFeedback.setUsername("Anonymous exam participant");
 		} else if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
+			Optional<Feedback> feedbackOpt = feedbackRepository.findFeedbackByExamIdAndAndUserID(command.getExamID(),userID);
+			if(feedbackOpt.isPresent()){
+				return GenerateResponseHelper.generateMessageResponse(HttpStatus.BAD_REQUEST,"You already have a feedback");
+			}
 			newFeedback.setUsername(
 					JwtTokenUtil.getUserInfoFromToken(
 							JwtTokenUtil.getTokenWithoutBearer(token), USER_NAME_TOKEN_KEY));
 			newFeedback.setUserID(userID);
 		}
+
 
 		feedbackRepository.save(newFeedback);
 

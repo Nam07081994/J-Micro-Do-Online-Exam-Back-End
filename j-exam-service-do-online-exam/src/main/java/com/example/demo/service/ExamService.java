@@ -309,7 +309,7 @@ public class ExamService {
 			exam.setExamType(ExamType.PRIVATE.name());
 			try {
 				HttpHeaders headers = new HttpHeaders();
-				headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token);
+				headers.add(HttpHeaders.AUTHORIZATION,  token);
 				HttpEntity<Object> entity = new HttpEntity<>(headers);
 				UriComponentsBuilder builder =
 						UriComponentsBuilder.fromUriString(CHECK_USER_UPLOAD_URI)
