@@ -1091,6 +1091,10 @@ public class ExamService {
 						restTemplate.exchange(UPDATE_IMAGE_URI, HttpMethod.POST, requestEntity, String.class);
 
 				examOpt.get().setThumbnail(response.getBody());
+                examRepository.save(examOpt.get());
+
+                return GenerateResponseHelper
+                        .generateMessageResponse(HttpStatus.OK,translationService.getTranslation(UPDATE))
 
 			} catch (Exception ex) {
 				return GenerateResponseHelper.generateMessageResponse(
