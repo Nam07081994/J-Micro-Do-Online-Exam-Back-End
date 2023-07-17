@@ -213,6 +213,8 @@ public class FeedbackService {
 		feedbackOpt.get().setComment(command.getComment());
 		feedbackOpt.get().setVoteNumber(command.getVote());
 
+		feedbackRepository.save(feedbackOpt.get());
+
 		return GenerateResponseHelper.generateMessageResponse(
 				HttpStatus.OK, "Edit feedback successfully");
 	}
