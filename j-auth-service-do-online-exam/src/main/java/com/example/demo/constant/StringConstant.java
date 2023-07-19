@@ -30,6 +30,8 @@ public class StringConstant {
 
 	public static final String PAGINATION_KEY = "pagination";
 
+	public static final String TOTAL_RECORDS_KEY = "totals";
+
 	public static final String PAGES_KEY = "pages";
 
 	public static final String PAGE_INDEX = "index";

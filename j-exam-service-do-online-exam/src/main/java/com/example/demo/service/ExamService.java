@@ -309,7 +309,7 @@ public class ExamService {
 			exam.setExamType(ExamType.PRIVATE.name());
 			try {
 				HttpHeaders headers = new HttpHeaders();
-				headers.add(HttpHeaders.AUTHORIZATION,  token);
+				headers.add(HttpHeaders.AUTHORIZATION, token);
 				HttpEntity<Object> entity = new HttpEntity<>(headers);
 				UriComponentsBuilder builder =
 						UriComponentsBuilder.fromUriString(CHECK_USER_UPLOAD_URI)
@@ -961,15 +961,20 @@ public class ExamService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(EXAM_IS_BEING_USE));
 		}
 
-		String userRoles = JwtTokenUtil.getUserInfoFromToken(JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
-		Long userID = Long.valueOf(JwtTokenUtil.getUserInfoFromToken(JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
+		String userRoles =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+		Long userID =
+				Long.valueOf(
+						JwtTokenUtil.getUserInfoFromToken(
+								JwtTokenUtil.getTokenWithoutBearer(token), USER_ID_TOKEN_KEY));
 
 		if ((userRoles.contains(ADMIN_ROLE)
 						&& !examOpt.get().getExamType().equals(ExamType.PRIVATE.name()))
 				|| (userID.compareTo(examOpt.get().getOwnerId()) == 0)) {
 
-			if(userRoles.contains(ADMIN_ROLE)){
-				if(userID.compareTo(examOpt.get().getOwnerId()) != 0){
+			if (userRoles.contains(ADMIN_ROLE)) {
+				if (userID.compareTo(examOpt.get().getOwnerId()) != 0) {
 					return GenerateResponseHelper.generateMessageResponse(
 							HttpStatus.BAD_REQUEST, translationService.getTranslation(USER_NOT_ALLOW_WITH_EXAM));
 				}
@@ -1091,10 +1096,10 @@ public class ExamService {
 						restTemplate.exchange(UPDATE_IMAGE_URI, HttpMethod.POST, requestEntity, String.class);
 
 				examOpt.get().setThumbnail(response.getBody());
-                examRepository.save(examOpt.get());
+				examRepository.save(examOpt.get());
 
-                return GenerateResponseHelper
-                        .generateMessageResponse(HttpStatus.OK,translationService.getTranslation(UPDATE_EXAM_THUMBNAIL_SUCCESS));
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.OK, translationService.getTranslation(UPDATE_EXAM_THUMBNAIL_SUCCESS));
 
 			} catch (Exception ex) {
 				return GenerateResponseHelper.generateMessageResponse(

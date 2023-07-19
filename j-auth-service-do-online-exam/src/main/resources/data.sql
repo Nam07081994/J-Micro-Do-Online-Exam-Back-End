@@ -32,10 +32,10 @@ INSERT INTO public.tbl_users ( address, auth_type, birthday, created_at, created
 
 -- Insert role data
 INSERT INTO public.tbl_roles ( created_at, created_by, end_point, role_name, updated_at, updated_by,deleted ) VALUES ( '2023-06-25 23:41:43.000000', 'hieunguyen', '[62,70]', 'USER_EXAM', null, 'hieunguyen',false );
-INSERT INTO public.tbl_roles ( created_at, created_by, end_point, role_name, updated_at, updated_by,deleted ) VALUES ( '2023-06-25 23:41:10.000000', 'hieunguyen', '[19, 20, 21, 45, 46, 48, 49, 50, 51, 59, 60, 62, 65, 67, 68, 69,70,71,72]', 'USER', null, 'hieunguyen',false );
-INSERT INTO public.tbl_roles ( created_at, created_by, end_point, role_name, updated_at, updated_by,deleted ) VALUES ( '2023-06-25 23:41:20.000000', 'hieunguyen', '[17, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 59, 60, 69,71,72]', 'ADMIN', null, 'hieunguyen',false );
+INSERT INTO public.tbl_roles ( created_at, created_by, end_point, role_name, updated_at, updated_by,deleted ) VALUES ( '2023-06-25 23:41:10.000000', 'hieunguyen', '[19, 20, 21, 45, 46, 48, 49, 50, 51, 59, 60, 62, 65, 67, 68, 69,70,71,72,73,74,75,76]', 'USER', null, 'hieunguyen',false );
+INSERT INTO public.tbl_roles ( created_at, created_by, end_point, role_name, updated_at, updated_by,deleted ) VALUES ( '2023-06-25 23:41:20.000000', 'hieunguyen', '[17, 19, 20, 21, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 59, 60, 69,71,72,76]', 'ADMIN', null, 'hieunguyen',false );
 INSERT INTO public.tbl_roles ( created_at, created_by, end_point, role_name, updated_at, updated_by,deleted ) VALUES ( '2023-06-25 23:40:22.000000', 'hieunguyen', '[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 52, 53, 54, 55, 56, 57, 58, 61, 63, 64, 66]', 'PUBLIC', null, 'hieunguyen',false );
-INSERT INTO public.tbl_roles ( created_at, created_by, end_point, role_name, updated_at, updated_by,deleted ) VALUES ( '2023-06-25 23:41:10.000000', 'hieunguyen', '[19, 20, 21, 45, 46, 48, 49, 50, 51, 59, 60, 62, 65, 67, 68, 69,70,71,72]', 'USER_PREMIUM', null, 'hieunguyen',false );
+INSERT INTO public.tbl_roles ( created_at, created_by, end_point, role_name, updated_at, updated_by,deleted ) VALUES ( '2023-06-25 23:41:10.000000', 'hieunguyen', '[19, 20, 21, 45, 46, 48, 49, 50, 51, 59, 60, 62, 65, 67, 68, 69,70,71,72,73,74,75,76]', 'USER_PREMIUM', null, 'hieunguyen',false );
 -- Insert endpoint data
 INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-06-25 10:29:53.000000', 'hieunguyen', '/api/v1/auth/login', null, null);
 INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-06-25 10:30:20.000000', 'hieunguyen', '/api/v1/auth/register', null, null);
@@ -109,3 +109,7 @@ INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_a
 INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-07-14 17:08:09.000000', 'hieunguyen', '/api/v1/exams/submit', null, null);
 INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-07-15 14:00:54.000000', 'hieunguyen', '/api/v1/exams/edit', null, null);
 INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-07-16 17:44:28.000000', 'hieunguyen', '/api/v1/exams/update-thumbnail', null, null);
+INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-07-18 21:17:33.000000', 'hieunguyen', '/api/v1/exams/contests/owner', null, null);
+INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-07-18 21:18:52.000000', 'hieunguyen', '/api/v1/exams/contests/get', null, null);
+INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-07-18 21:20:29.000000', 'hieunguyen', '/api/v1/exams/contests/create', null, null);
+INSERT INTO public.tbl_end_points ( created_at, created_by, end_point, updated_at, updated_by) VALUES ( '2023-07-18 21:20:34.000000', 'hieunguyen', '/api/v1/exams/contests/delete', null, null);
