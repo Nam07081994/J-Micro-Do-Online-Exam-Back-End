@@ -11,9 +11,12 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class LoginAccountExamCommand {
-	@NotEmpty(message = "Username is mandatory")
-	private String username;
+    @NotEmpty(message = "Username is mandatory")
+    private String username;
 
-	@NotEmpty(message = "Password is mandatory")
-	private String password;
+    @NotEmpty(message = "Password is mandatory")
+    private String password;
+
+    @NotEmpty(message = "ValidateToken is mandatory")
+    private String validateToken;
 }

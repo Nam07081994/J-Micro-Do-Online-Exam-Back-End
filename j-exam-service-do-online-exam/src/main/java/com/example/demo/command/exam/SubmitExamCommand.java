@@ -17,4 +17,8 @@ public class SubmitExamCommand {
 	private Long id;
 
 	private List<AnswerDto> answers;
+
+	private Long startTimeExam;
+
+	private Long endTimeExam;
 }

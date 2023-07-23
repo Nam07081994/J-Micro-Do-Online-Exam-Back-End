@@ -36,7 +36,8 @@ public class ContestController {
 
 	// user exam fetch contest exam
 	@GetMapping("/user")
-	public ResponseEntity<?> fetchContest(@RequestHeader("Authorization") String token)
+	public ResponseEntity<?> fetchContest(
+			@RequestHeader("Authorization") String token)
 			throws JsonProcessingException {
 		return contestService.getContestByUser(token);
 	}

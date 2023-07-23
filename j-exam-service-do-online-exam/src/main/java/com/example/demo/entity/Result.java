@@ -42,6 +42,14 @@ public class Result {
 	@Column(name = "contest_id")
 	private Long contestId;
 
+	private Integer aNumberAnswerCorrect;
+
+	private Integer aNumberAnswerInCorrect;
+
+	private String startTimeExam;
+
+	private String endTimeExam;
+
 	@Column(name = "email_examinee", nullable = false)
 	private String emailExaminee;
 
