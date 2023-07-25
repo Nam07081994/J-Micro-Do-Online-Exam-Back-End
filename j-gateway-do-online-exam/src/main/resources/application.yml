@@ -73,11 +73,11 @@ spring:
                   reset-timeout: 5000
             - name: AuthenticationFilter
           #config rate limiter filter
-            - name: RequestRateLimiter
-              args:
-                key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 2
-                redis-rate-limiter.burstCapacity: 2
+#            - name: RequestRateLimiter
+#              args:
+#                key-resolver: "#{@userKeyResolver}"
+#                redis-rate-limiter.replenishRate: 2
+#                redis-rate-limiter.burstCapacity: 2
 #-------------------------------------------------------------------------------
         - id: exam-service
           uri: http://localhost:8765/

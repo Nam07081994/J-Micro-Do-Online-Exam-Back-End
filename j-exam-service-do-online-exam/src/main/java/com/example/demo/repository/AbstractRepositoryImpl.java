@@ -9,6 +9,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -22,7 +23,6 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 	@Override
 	public Map<String, Object> search(
 			Map<String, QueryCondition> searchParams,
-			Map<String, QueryCondition> orParams,
 			String orderBy,
 			int pageSize,
 			int pageIndex,
@@ -39,21 +39,28 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 				queryCount.append(WHERE_STATEMENT);
 				String search =
 						searchParams.keySet().stream()
-								.map(s -> "c." + s + SPACE_STRING + searchParams.get(s).getOperation() + " :" + s)
+								.map(
+										s -> {
+											if (searchParams.get(s).getOperation().equals(BETWEEN_OPERATOR)) {
+												return "c."
+														+ s
+														+ SPACE_STRING
+														+ searchParams.get(s).getOperation()
+														+ " :"
+														+ s
+														+ " AND :secondValue";
+											} else {
+												return "c."
+														+ s
+														+ SPACE_STRING
+														+ searchParams.get(s).getOperation()
+														+ " :"
+														+ s;
+											}
+										})
 								.collect(Collectors.joining(AND_STATEMENT));
 				query.append(search);
 				queryCount.append(search);
-			}
-
-			if (!orParams.isEmpty()) {
-				query.append(ORDER_STATEMENT);
-				queryCount.append(ORDER_STATEMENT);
-				String orStatement =
-						orParams.keySet().stream()
-								.map(s -> "c. " + s + SPACE_STRING + orParams.get(s).getOperation() + " :" + s)
-								.collect(Collectors.joining(AND_STATEMENT));
-				query.append(orStatement);
-				queryCount.append(orStatement);
 			}
 
 			// Append order by statement
@@ -68,12 +75,10 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 							.setFirstResult(startIndex)
 							.setMaxResults(pageSize);
 			setQueryParam(searchParams, em);
-			setQueryParam(orParams, em);
 
 			var results = em.getResultList();
 			var records = entityManager.createQuery(queryCount.toString(), Long.class);
 			setQueryParam(searchParams, (TypedQuery<T>) records);
-			setQueryParam(orParams, (TypedQuery<T>) records);
 
 			var total = records.getSingleResult();
 			int totalPages = (int) Math.ceil(total / (double) pageSize);
@@ -90,12 +95,142 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 		}
 	}
 
+	@Override
+	public Map<String, Object> searchWithUnion(
+			Map<String, QueryCondition> searchParams,
+			List<String> keyParams,
+			String orderBy,
+			int pageSize,
+			int pageIndex,
+			Class<T> clazz)
+			throws ExecuteSQLException {
+		try {
+			StringBuilder queryStatement =
+					new StringBuilder("SELECT c FROM " + clazz.getSimpleName() + " c ");
+			StringBuilder unionStatement =
+					new StringBuilder(" UNION ALL SELECT a FROM " + clazz.getSimpleName() + " a ");
+			StringBuilder defaultUnionStatement = new StringBuilder(" AND a.ownerId <> :ownerId");
+
+			if (!searchParams.isEmpty()) {
+				queryStatement.append(WHERE_STATEMENT);
+				String search =
+						searchParams.keySet().stream()
+								.map(
+										s -> {
+											if (clazz.getSimpleName().equals("Exam")) {
+												if (s.equals(EXAM_TYPE_SEARCH_KEY)) {
+													return "1 = 1";
+												} else if (searchParams.get(s).getOperation().equals(BETWEEN_OPERATOR)) {
+													return "c."
+															+ s
+															+ SPACE_STRING
+															+ searchParams.get(s).getOperation()
+															+ " :"
+															+ s
+															+ " AND :secondValue";
+												} else {
+													return "c."
+															+ s
+															+ SPACE_STRING
+															+ searchParams.get(s).getOperation()
+															+ " :"
+															+ s;
+												}
+											} else {
+												if (searchParams.get(s).getOperation().equals(BETWEEN_OPERATOR)) {
+													return "c."
+															+ s
+															+ SPACE_STRING
+															+ searchParams.get(s).getOperation()
+															+ " :"
+															+ s
+															+ " AND :secondValue";
+												} else {
+													return "c."
+															+ s
+															+ SPACE_STRING
+															+ searchParams.get(s).getOperation()
+															+ " :"
+															+ s;
+												}
+											}
+										})
+								.collect(Collectors.joining(AND_STATEMENT));
+				queryStatement.append(search);
+
+				if (clazz.getSimpleName().equals("Exam")) {
+					unionStatement.append(WHERE_STATEMENT);
+					String unionSearch =
+							searchParams.keySet().stream()
+									.map(
+											s -> {
+												if (s.equals(EXAM_OWNER_ID_SEARCH_KEY)) {
+													return "1 = 1";
+												} else if (searchParams.get(s).getOperation().equals(BETWEEN_OPERATOR)) {
+													return "a."
+															+ s
+															+ SPACE_STRING
+															+ searchParams.get(s).getOperation()
+															+ " :"
+															+ s
+															+ " AND :secondValue";
+												} else {
+													return "a."
+															+ s
+															+ SPACE_STRING
+															+ searchParams.get(s).getOperation()
+															+ " :"
+															+ s;
+												}
+											})
+									.collect(Collectors.joining(AND_STATEMENT));
+					queryStatement.append(unionStatement).append(unionSearch).append(defaultUnionStatement);
+				}
+			}
+
+			// Append order by statement
+			if (!orderBy.isEmpty() && !clazz.getSimpleName().equals("Exam")) {
+				queryStatement.append(orderBy);
+			}
+
+			int startIndex = (pageIndex - 1) * pageSize;
+
+			var em =
+					entityManager
+							.createQuery(queryStatement.toString(), clazz)
+							.setFirstResult(startIndex)
+							.setMaxResults(pageSize);
+			setQueryParam(searchParams, em);
+
+			var results = em.getResultList();
+			var records = entityManager.createQuery(queryStatement.toString(), clazz);
+			setQueryParam(searchParams, records);
+
+			var total = records.getResultList();
+			int totalPages = (int) Math.ceil(total.size() / (double) pageSize);
+
+			return new HashMap<>(
+					Map.of(
+							DATA_KEY,
+							results,
+							PAGINATION_KEY,
+							Map.of(
+									PAGES_KEY, totalPages, PAGE_INDEX, pageIndex, TOTAL_RECORDS_KEY, total.size())));
+		} catch (Exception ex) {
+			throw new ExecuteSQLException(ex.getMessage(), "");
+		}
+	}
+
 	private void setQueryParam(Map<String, QueryCondition> searchParams, TypedQuery<T> query)
 			throws ExecuteSQLException {
 		AtomicBoolean flag = new AtomicBoolean(false);
 		searchParams.forEach(
 				(s, s2) -> {
 					switch (s2.getOperation()) {
+						case BETWEEN_OPERATOR -> {
+							query.setParameter(s, s2.getValue());
+							query.setParameter("secondValue", s2.getValue2());
+						}
 						case LIKE_OPERATOR, NOT_LIKE_OPERATOR -> query.setParameter(
 								s, PERCENT_OPERATOR + s2.getValue() + PERCENT_OPERATOR);
 						case EQUAL_OPERATOR,

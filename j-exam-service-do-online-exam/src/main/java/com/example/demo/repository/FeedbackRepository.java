@@ -15,21 +15,21 @@ public interface FeedbackRepository
 
 	@Query(
 			value =
-					"SELECT * FROM tbl_users WHERE user_id=:userID AND examName=:examName UNION ALL"
-							+ " (SELECT * FROM tbl_users AS b WHERE user_id <> :userID AND examName=:examName order by b.created_at DESC );",
+					"SELECT * FROM tbl_feedbacks WHERE user_id=:userID AND exam_name=:examName UNION ALL"
+							+ " (SELECT * FROM tbl_feedbacks AS b WHERE user_id <> :userID AND exam_name=:examName order by b.created_at DESC );",
 			countQuery =
-					"SELECT * FROM tbl_users WHERE user_id=:userID AND examName=:examName UNION ALL"
-							+ " (SELECT * FROM tbl_users AS b WHERE user_id <> :userID AND examName=:examName order by b.created_at DESC );",
+					"SELECT * FROM tbl_feedbacks WHERE user_id=:userID AND exam_name=:examName UNION ALL"
+							+ " (SELECT * FROM tbl_feedbacks AS b WHERE user_id <> :userID AND exam_name=:examName order by b.created_at DESC );",
 			nativeQuery = true)
 	Page<Feedback> getFeedbackByUser(Long userID, String examName, Pageable pageable);
 
 	@Query(
 			value =
-					"SELECT * FROM tbl_users WHERE user_id=:userID AND examName=:examName AND vote_number=:vote UNION ALL"
-							+ " (SELECT * FROM tbl_users AS b WHERE user_id <> :userID AND examName=:examName order by b.created_at DESC );",
+					"SELECT * FROM tbl_feedbacks WHERE user_id=:userID AND exam_name=:examName AND vote_number=:vote UNION ALL"
+							+ " (SELECT * FROM tbl_feedbacks AS b WHERE user_id <> :userID AND exam_name=:examName AND vote_number=:vote order by b.created_at DESC );",
 			countQuery =
-					"SELECT * FROM tbl_users WHERE user_id=:userID AND examName=:examName AND vote_number=:vote UNION ALL"
-							+ " (SELECT * FROM tbl_users AS b WHERE user_id <> :userID AND examName=:examName order by b.created_at DESC );",
+					"SELECT * FROM tbl_feedbacks WHERE user_id=:userID AND exam_name=:examName AND vote_number=:vote UNION ALL"
+							+ " (SELECT * FROM tbl_feedbacks AS b WHERE user_id <> :userID AND exam_name=:examName AND vote_number=:vote order by b.created_at DESC );",
 			nativeQuery = true)
 	Page<Feedback> getFeedbackByUserVote(
 			Long userID, String examName, Integer vote, Pageable pageable);

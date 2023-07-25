@@ -77,7 +77,7 @@ public class ExamController {
 
 	@GetMapping("/name")
 	public ResponseEntity<?> getExamByName(
-			@RequestHeader("Authorization") String token, @RequestParam("name") String name)
+			@RequestHeader("Authorization") @Nullable String token, @RequestParam("name") String name)
 			throws JsonProcessingException {
 		return examService.getExamByName(token, name, GET_EXAM_CARD);
 	}

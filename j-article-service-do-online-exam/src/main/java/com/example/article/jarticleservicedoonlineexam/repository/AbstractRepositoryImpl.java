@@ -83,7 +83,7 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 							DATA_KEY,
 							results,
 							PAGINATION_KEY,
-							Map.of(PAGES_KEY, totalPages, PAGE_INDEX, pageIndex)));
+							Map.of(PAGES_KEY, totalPages, PAGE_INDEX, pageIndex, TOTAL_RECORDS_KEY, total)));
 		} catch (Exception ex) {
 			// TODO: add sql error
 			throw new ExecuteSQLException(ex.getMessage());

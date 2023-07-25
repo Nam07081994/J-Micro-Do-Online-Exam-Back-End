@@ -52,4 +52,9 @@ public class RoleController {
 			@RequestBody @Valid RoleCommand command, @RequestParam("id") Long id) {
 		return roleService.editRole(command, id);
 	}
+
+	@DeleteMapping("/delete")
+	public ResponseEntity<?> deleteRole(@RequestParam("id") Long id) {
+		return roleService.softDeleteRole(id);
+	}
 }

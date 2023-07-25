@@ -10,4 +10,5 @@ import lombok.*;
 public class QueryCondition {
 	private String operation;
 	private Object value;
+	private Object value2;
 }

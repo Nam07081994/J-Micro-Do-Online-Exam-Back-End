@@ -37,6 +37,8 @@ public class TranslationCodeConstants {
 
 	public static final String UPDATE_EXAM_INFO_SUCCESS = "update-exam-info-success";
 
+	public static final String UPDATE_EXAM_THUMBNAIL_SUCCESS = "update-exam-thumbnail-success";
+
 	public static final String EXPORT_EXAM_FAIL = "export-exam-fail";
 
 	public static final String NOT_ALLOW_CREATE_EXAM = "user-exceed-limit-upload";

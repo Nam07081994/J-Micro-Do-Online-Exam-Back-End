@@ -284,7 +284,9 @@ public class AuthenticationService {
 	}
 
 	public ResponseEntity<?> checkUserAction(String token, int flag) {
-		Long userID = (Long) JwtTokenUtil.getUserInfoFromToken(token, Claims::getAudience);
+		Long userID =
+				Long.parseLong(
+						String.valueOf(JwtTokenUtil.getUserInfoFromToken(token, Claims::getAudience)));
 		Optional<User> userOpt = userRepository.findById(userID);
 		if (userOpt.isEmpty()) {
 			return ResponseEntity.badRequest().build();
@@ -304,7 +306,9 @@ public class AuthenticationService {
 	}
 
 	public ResponseEntity<?> updateUserInfo(String token, UpdateUserInfoCommand command) {
-		Long userID = (Long) JwtTokenUtil.getUserInfoFromToken(token, Claims::getAudience);
+		Long userID =
+				Long.parseLong(
+						String.valueOf(JwtTokenUtil.getUserInfoFromToken(token, Claims::getAudience)));
 		Optional<User> userOpt = userRepository.findById(userID);
 		Optional<User> userOptByEmail = userRepository.findByEmail(command.getEmail());
 		if (userOpt.isEmpty()) {

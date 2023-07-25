@@ -12,6 +12,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class FeedbackDto {
 	private Long id;
+	private Long userID;
 	private Integer vote;
 	private String comment;
 	private String createdAt;
@@ -19,6 +20,7 @@ public class FeedbackDto {
 
 	public FeedbackDto(Feedback feedback) {
 		this.id = feedback.getId();
+		this.userID = feedback.getUserID();
 		this.vote = feedback.getVoteNumber();
 		this.comment = feedback.getComment();
 		this.username = feedback.getUsername();

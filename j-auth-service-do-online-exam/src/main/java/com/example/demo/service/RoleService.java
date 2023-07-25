@@ -1,8 +1,8 @@
 package com.example.demo.service;
 
-import static com.example.demo.constant.StringConstant.DATA_KEY;
-import static com.example.demo.constant.StringConstant.ROLE_NAME_KEY;
+import static com.example.demo.constant.StringConstant.*;
 import static com.example.demo.constant.TranslationCodeConstant.FROM_DATE_TO_DATE_INVALID;
+import static com.example.demo.constant.TranslationCodeConstant.NOT_FOUND_ROLE_INFORMATION;
 
 import com.example.demo.command.CommonSearchCommand;
 import com.example.demo.command.RoleCommand;
@@ -22,8 +22,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -31,17 +32,19 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@AllArgsConstructor
 @EnableTransactionManagement
 public class RoleService {
 
-	private RoleRepository roleRepository;
+	@Value("${app.restrict-element.roles}")
+	private String RESTRICT_ROLES;
 
-	private EndPointService endPointService;
+	@Autowired private RoleRepository roleRepository;
 
-	private TranslationService translationService;
+	@Autowired private EndPointService endPointService;
 
-	private AbstractRepositoryImpl<Role> abstractRepository;
+	@Autowired private TranslationService translationService;
+
+	@Autowired private AbstractRepositoryImpl<Role> abstractRepository;
 
 	public ResponseEntity<?> getRoles(CommonSearchCommand command, String name)
 			throws ExecuteSQLException, InvalidDateFormatException {
@@ -124,6 +127,18 @@ public class RoleService {
 
 		roleOptById.get().setRoleName(command.getName());
 		roleOptById.get().setEndPoint(command.getEndPoint());
+		if (roleOptById.get().getRoleName().equals(USER_ROLE_STRING)) {
+			Optional<Role> premiumRole = roleRepository.findByRoleName(USER_PREMIUM_ROLE_STRING);
+			if (premiumRole.isEmpty()) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST,
+						translationService.getTranslation(TranslationCodeConstant.ROLE_NAME_EXIST));
+			}
+
+			premiumRole.get().setEndPoint(command.getEndPoint());
+			roleRepository.save(premiumRole.get());
+		}
+
 		roleRepository.save(roleOptById.get());
 
 		return GenerateResponseHelper.generateMessageResponse(
@@ -160,5 +175,23 @@ public class RoleService {
 				Map.of(
 						StringConstant.DATA_KEY,
 						endPointService.getEndPointsByRole(roleOpt.get().getEndPoint())));
+	}
+
+	public ResponseEntity<?> softDeleteRole(Long id) {
+		Optional<Role> roleOpt = roleRepository.findById(id);
+		if (roleOpt.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_ROLE_INFORMATION));
+		}
+
+		if (RESTRICT_ROLES.contains(roleOpt.get().getRoleName())) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, roleOpt.get().getRoleName() + " can not be deleted");
+		}
+
+		roleRepository.deleteById(id);
+
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, "Delete role successfully");
 	}
 }

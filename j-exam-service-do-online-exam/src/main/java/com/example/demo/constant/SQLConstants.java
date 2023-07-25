@@ -9,8 +9,6 @@ public class SQLConstants {
 	public static final String CATEGORY_NAME_KEY = "categoryName";
 
 	// exam search field
-	public static final String EXAM_IS_PRIVATE_SEARCH_KEY = "isPrivate";
-
 	public static final String EXAM_TYPE_SEARCH_KEY = "examType";
 
 	public static final String EXAM_OWNER_ID_SEARCH_KEY = "ownerId";
@@ -35,6 +33,8 @@ public class SQLConstants {
 
 	public static final String ORDER_STATEMENT = " ORDER BY ";
 
+	public static final String OR_STATEMENT = " OR ";
+
 	public static final String LIKE_OPERATOR = "LIKE";
 
 	public static final String NOT_LIKE_OPERATOR = "NOT LIKE";
@@ -48,6 +48,8 @@ public class SQLConstants {
 	public static final String GREATER_THAN_OPERATION = ">=";
 
 	public static final String LESS_THAN_OPERATOR = "<=";
+
+	public static final String BETWEEN_OPERATOR = " BETWEEN ";
 
 	public static final String PERCENT_OPERATOR = "%";
 }

@@ -36,7 +36,8 @@ public class ContestController {
 
 	// user exam fetch contest exam
 	@GetMapping("/user")
-	public ResponseEntity<?> fetchContest(@RequestHeader("Authorization") String token)
+	public ResponseEntity<?> fetchContest(
+			@RequestHeader("Authorization") String token)
 			throws JsonProcessingException {
 		return contestService.getContestByUser(token);
 	}
@@ -60,7 +61,7 @@ public class ContestController {
 		return contestService.createContest(token, command);
 	}
 
-	@DeleteMapping("/{id}")
+	@DeleteMapping("/delete/{id}")
 	public ResponseEntity<?> deleteContest(
 			@RequestHeader("Authorization") String token, @PathVariable("id") Long id)
 			throws JsonProcessingException {

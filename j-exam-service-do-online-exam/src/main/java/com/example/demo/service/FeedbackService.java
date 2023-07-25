@@ -74,6 +74,12 @@ public class FeedbackService {
 		if (userRoles.contains(USER_EXAM_ROLE)) {
 			newFeedback.setUsername("Anonymous exam participant");
 		} else if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
+			Optional<Feedback> feedbackOpt =
+					feedbackRepository.findFeedbackByExamIdAndAndUserID(command.getExamID(), userID);
+			if (feedbackOpt.isPresent()) {
+				return GenerateResponseHelper.generateMessageResponse(
+						HttpStatus.BAD_REQUEST, "You already have a feedback");
+			}
 			newFeedback.setUsername(
 					JwtTokenUtil.getUserInfoFromToken(
 							JwtTokenUtil.getTokenWithoutBearer(token), USER_NAME_TOKEN_KEY));
@@ -87,7 +93,7 @@ public class FeedbackService {
 	}
 
 	public ResponseEntity<?> getFeedbackByExamName(
-			String token, String name, int vote, int pageSize, int pageIndex)
+			String token, String name, int vote, int pageIndex, int pageSize)
 			throws JsonProcessingException, ExecuteSQLException {
 		if (StringUtils.isEmpty(name)) {
 			return GenerateResponseHelper.generateMessageResponse(
@@ -140,8 +146,7 @@ public class FeedbackService {
 		searchParams.put(
 				"examName", QueryCondition.builder().value(name).operation(EQUAL_OPERATOR).build());
 
-		var result =
-				feedbackRepository.search(searchParams, Map.of(), EMPTY_STRING, 10, 1, Feedback.class);
+		var result = feedbackRepository.search(searchParams, EMPTY_STRING, 10, 1, Feedback.class);
 
 		var feedbacks = (List<Feedback>) result.get(DATA_KEY);
 		result.put(DATA_KEY, feedbacks.stream().map(FeedbackDto::new).collect(Collectors.toList()));
@@ -209,6 +214,8 @@ public class FeedbackService {
 		feedbackOpt.get().setComment(command.getComment());
 		feedbackOpt.get().setVoteNumber(command.getVote());
 
+		feedbackRepository.save(feedbackOpt.get());
+
 		return GenerateResponseHelper.generateMessageResponse(
 				HttpStatus.OK, "Edit feedback successfully");
 	}
@@ -246,9 +253,9 @@ public class FeedbackService {
 		Map<Integer, Float> ratingData = new HashMap<>();
 		Integer totalVote = 0;
 		List<Feedback> feedbacks = feedbackRepository.findAllByExamId(id);
+		var stars = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
+		var starsValue = new ArrayList<>(Arrays.asList(0f, 0f, 0f, 0f, 0f));
 		if (feedbacks.size() == 0) {
-			var stars = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5));
-			var starsValue = new ArrayList<>(Arrays.asList(0f, 0f, 0f, 0f, 0f));
 			return RatingDto.builder()
 					.ranking("Not yet")
 					.ratingData(new StarDto(stars, starsValue))
@@ -266,8 +273,13 @@ public class FeedbackService {
 			}
 		}
 
-		for (Map.Entry<Integer, Float> entry : ratingData.entrySet()) {
-			ratingData.put(entry.getKey(), entry.getValue() / totalVote * 100);
+		for (int num : stars) {
+			if (ratingData.containsKey(num)) {
+				var timeOccur = ratingData.get(num);
+				ratingData.put(num, timeOccur * num / totalVote * 100);
+			} else {
+				ratingData.put(num, 0f);
+			}
 		}
 
 		var totalRating = totalVote / feedbacks.size();

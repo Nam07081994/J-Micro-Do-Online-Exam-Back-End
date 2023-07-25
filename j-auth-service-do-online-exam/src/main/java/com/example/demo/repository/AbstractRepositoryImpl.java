@@ -69,7 +69,13 @@ public class AbstractRepositoryImpl<T> implements AbstractRepository<T> {
 							StringConstant.DATA_KEY,
 							results,
 							StringConstant.PAGINATION_KEY,
-							Map.of(StringConstant.PAGES_KEY, totalPages, StringConstant.PAGE_INDEX, pageIndex)));
+							Map.of(
+									StringConstant.PAGES_KEY,
+									totalPages,
+									StringConstant.PAGE_INDEX,
+									pageIndex,
+									StringConstant.TOTAL_RECORDS_KEY,
+									total)));
 		} catch (Exception ex) {
 			throw new ExecuteSQLException(ex.getMessage());
 		}
