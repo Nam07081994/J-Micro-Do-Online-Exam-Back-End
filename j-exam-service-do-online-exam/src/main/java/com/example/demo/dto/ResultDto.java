@@ -15,13 +15,15 @@ public class ResultDto {
     private Double point;
     private String userName;
     private String createdAt;
+    private String contestName;
     private Integer correctAnswers;
     private Integer incorrectAnswers;
 
-    public ResultDto(Result result, String examName) {
+    public ResultDto(Result result, String examName,String contestName) {
         this.exam = examName;
+        this.contestName = contestName;
         this.point = result.getTotalPoint();
-        this.exam = result.getEmailExaminee();
+        this.userName = result.getEmailExaminee();
         this.createdAt = result.getCreatedAt().toString();
         this.correctAnswers = result.getANumberAnswerCorrect();
         this.incorrectAnswers = result.getANumberAnswerInCorrect();

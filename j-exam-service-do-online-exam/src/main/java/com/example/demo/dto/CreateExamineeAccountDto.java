@@ -11,6 +11,8 @@ import lombok.Data;
 public class CreateExamineeAccountDto {
 	private Long contestID;
 
+	private String examName;
+
 	private List<User> userInfo;
 
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm")

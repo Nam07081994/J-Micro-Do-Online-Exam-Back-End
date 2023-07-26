@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.command.CreateAccountsExamCommand;
 import com.example.demo.command.LoginAccountExamCommand;
 import com.example.demo.service.AccountExamService;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -16,7 +17,7 @@ public class AccountExamController {
 	private AccountExamService accountExamService;
 
 	@PostMapping("/login")
-	public ResponseEntity<?> loginAccountExam(@RequestBody @Valid LoginAccountExamCommand command) {
+	public ResponseEntity<?> loginAccountExam(@RequestBody @Valid LoginAccountExamCommand command) throws JsonProcessingException {
 		return accountExamService.login(command);
 	}
 
