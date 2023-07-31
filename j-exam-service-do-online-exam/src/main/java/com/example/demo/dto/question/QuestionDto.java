@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class QuestionDto {
+	private Long id;
 	private String questionType;
 	private Integer questionPoint;
 	private String question;
@@ -17,6 +18,7 @@ public class QuestionDto {
 	private List<Long> correctAnswers;
 
 	public QuestionDto(Question ques) {
+		this.id = ques.getId();
 		this.answers = ques.getAnswers();
 		this.question = ques.getQuestion();
 		this.questionPoint = ques.getQuestionPoint();

@@ -63,6 +63,9 @@ public class ContestService {
 	public ResponseEntity<?> getContestsByOwner(String token, QuerySearchCommand command, String name)
 			throws JsonProcessingException, InvalidDateFormatException, ExecuteSQLException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
+
+		System.out.println(token);
+
 		Long userID =
 				Long.valueOf(
 						JwtTokenUtil.getUserInfoFromToken(
@@ -71,9 +74,16 @@ public class ContestService {
 				JwtTokenUtil.getUserInfoFromToken(
 						JwtTokenUtil.getTokenWithoutBearer(token), USER_NAME_TOKEN_KEY);
 
-		searchParams.put(
-				CONTEST_OWNER_SEARCH_KEY,
-				QueryCondition.builder().value(userID).operation(EQUAL_OPERATOR).build());
+		String roles =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+
+		if(!roles.equals(ADMIN_ROLE)){
+			searchParams.put(
+					CONTEST_OWNER_SEARCH_KEY,
+					QueryCondition.builder().value(userID).operation(EQUAL_OPERATOR).build());
+
+		}
 
 		if (!StringUtils.isEmpty(name)) {
 			searchParams.put(
