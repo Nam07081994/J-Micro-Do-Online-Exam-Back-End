@@ -14,6 +14,7 @@ import com.example.demo.common.response.GenerateResponseHelper;
 import com.example.demo.config.jpa.JpaConfig;
 import com.example.demo.constant.StringConstant;
 import com.example.demo.dto.UserDto;
+import com.example.demo.entity.Role;
 import com.example.demo.entity.User;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
@@ -24,6 +25,7 @@ import com.example.demo.repository.UserRepository;
 import io.jsonwebtoken.Claims;
 import java.util.*;
 import java.util.stream.Collectors;
+
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,6 +36,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
@@ -341,4 +344,38 @@ public class AuthenticationService {
 		return GenerateResponseHelper.generateMessageResponse(
 				HttpStatus.OK, translationService.getTranslation(UPDATE_USER_INFO_SUCCESS));
 	}
+	@Transactional
+	public ResponseEntity<?> updateUserRole(Long userId, String roleName){
+		Optional<User> user = userRepository.findById(userId);
+		Optional<Role> role = roleRepository.findByRoleName(roleName);
+
+		if (user.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_USER_INFORMATION));
+		}
+
+		if (role.isEmpty()) {
+			return GenerateResponseHelper.generateMessageResponse(
+					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_FOUND_ROLE_INFORMATION));
+		}
+
+		var userRole = user.get();
+		userRole.getRoles().clear();
+		userRole.getRoles().add(role.get().getId());
+		if(roleName.equals(USER_ROLE_STRING)){
+			userRole.setUploadNumber(Map.of(EXAM_UPLOAD_KEY, A_NUMBER_UPLOAD_EXAM, CONTEST_UPLOAD_KEY, A_NUMBER_UPLOAD_CONTEST));
+		}
+		userRole.setUploadNumber(null);
+		userRepository.save(userRole);
+		return GenerateResponseHelper.generateMessageResponse(
+				HttpStatus.OK, translationService.getTranslation(UPDATE_USER_INFO_SUCCESS));
+	}
+
+	public UserDto getUserEmailByUserId(Long id){
+		User entity = userRepository.findById(id).get();
+		UserDto dto = new UserDto(entity.getId(), entity.getEmail(), entity.getUserName(), entity.getCreatedAt().toString(), entity.getPhone(), entity.getAddress(), entity.getBirthday(), entity.getThumbnail(), entity.getRoles().stream().map(String::valueOf).collect(Collectors.toList()));
+		return dto;
+
+	}
+
 }

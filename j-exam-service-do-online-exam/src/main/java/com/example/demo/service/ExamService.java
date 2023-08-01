@@ -437,6 +437,8 @@ public class ExamService {
                     return null;
                 }
 
+                isExceptToAccessExam = true;
+
             } else if (userRoles.contains(USER_ROLE)) {
                 if (examOpt.get().getExamType().equals(ExamType.FREE.name())
                         || examOpt.get().getOwnerId().compareTo(userID) == 0) {
@@ -896,6 +898,7 @@ public class ExamService {
             }
         }
 
+        var contestName = "";
         var newResult = new Result();
         if (userRoles.contains(USER_EXAM_ROLE)) {
             Long contestID =
@@ -904,6 +907,7 @@ public class ExamService {
                                     JwtTokenUtil.getTokenWithoutBearer(token), CONTEST_ID_TOKEN_KEY));
             newResult.setContestId(contestID);
             Optional<Contest> contestOpt = contestRepository.findById(contestID);
+            contestName = contestOpt.get().getName();
             if (timeSubmit.isAfter(contestOpt.get().getEndAt())) {
                 return GenerateResponseHelper.generateMessageResponse(
                         HttpStatus.BAD_REQUEST, translationService.getTranslation(INVALID_TIME_SUBMIT_CONTEST));
@@ -924,7 +928,8 @@ public class ExamService {
         resultRepository.save(newResult);
 
         return GenerateResponseHelper.generateDataResponse(
-                HttpStatus.OK, Map.of(DATA_KEY, new ResultDto(newResult, examOpt.get().getExamName())));
+                HttpStatus.OK, Map.of(DATA_KEY,
+                        new ResultDto(newResult, examOpt.get().getExamName(), userRoles.contains(USER_EXAM_ROLE) ? contestName : "")));
     }
 
     @Transactional

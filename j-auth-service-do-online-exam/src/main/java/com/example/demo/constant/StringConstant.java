@@ -101,7 +101,7 @@ public class StringConstant {
 					+ "<li>Contest ID: %s</li>"
 					+ "<li>User name: %s</li>"
 					+ "<li>Password: %s</li>"
-					+ "<li>Link login: <a href=\"%s\">%s</a></li>"
+					+ "<li>Link login: <a href=\"%s\">Click here to login</a></li>"
 					+ "</ul>"
 					+ "<h3>Note:</h3>"
 					+ "<ol>"
@@ -117,7 +117,7 @@ public class StringConstant {
 					+ "</body>"
 					+ "</html>";
 
-	public static final String LOGIN_CONTEST_LINK = "abc.com";
+	public static final String LOGIN_CONTEST_LINK = "http://localhost:3000/contest/login?token=";
 
 	public static final String EMAIL_WHILE_SENDING_ERROR = "Error while sending mail!!!";
 

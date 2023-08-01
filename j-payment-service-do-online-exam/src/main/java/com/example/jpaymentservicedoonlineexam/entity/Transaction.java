@@ -12,6 +12,7 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -26,6 +27,8 @@ public class Transaction {
     @Id
     private String transactionNo;
     @Column(nullable = false)
+    private Long userId;
+    @Column(nullable = false)
     private Long amount;
     @Column(nullable = false)
     private String bankCode;
@@ -36,10 +39,12 @@ public class Transaction {
     @Column(nullable = false)
     private String orderInfo;
     @Column(nullable = false)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime payDate;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate payDate;
     @Column(nullable = false)
-    private RecurringPaymentType recurringPaymentType;
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private LocalDate expiredDate;
+
     @Column(nullable = false)
     private PaymentStatusType responseCode;
     @Column(nullable = false)

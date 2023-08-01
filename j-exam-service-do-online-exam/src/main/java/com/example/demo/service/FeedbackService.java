@@ -73,6 +73,7 @@ public class FeedbackService {
 
 		if (userRoles.contains(USER_EXAM_ROLE)) {
 			newFeedback.setUsername("Anonymous exam participant");
+			newFeedback.setUserID(0L);
 		} else if (userRoles.contains(USER_ROLE) || userRoles.contains(USER_PREMIUM_ROLE)) {
 			Optional<Feedback> feedbackOpt =
 					feedbackRepository.findFeedbackByExamIdAndAndUserID(command.getExamID(), userID);

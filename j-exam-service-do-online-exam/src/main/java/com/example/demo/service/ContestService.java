@@ -63,6 +63,9 @@ public class ContestService {
 	public ResponseEntity<?> getContestsByOwner(String token, QuerySearchCommand command, String name)
 			throws JsonProcessingException, InvalidDateFormatException, ExecuteSQLException {
 		Map<String, QueryCondition> searchParams = new HashMap<>();
+
+		System.out.println(token);
+
 		Long userID =
 				Long.valueOf(
 						JwtTokenUtil.getUserInfoFromToken(
@@ -71,9 +74,16 @@ public class ContestService {
 				JwtTokenUtil.getUserInfoFromToken(
 						JwtTokenUtil.getTokenWithoutBearer(token), USER_NAME_TOKEN_KEY);
 
-		searchParams.put(
-				CONTEST_OWNER_SEARCH_KEY,
-				QueryCondition.builder().value(userID).operation(EQUAL_OPERATOR).build());
+		String roles =
+				JwtTokenUtil.getUserInfoFromToken(
+						JwtTokenUtil.getTokenWithoutBearer(token), USER_ROLES_TOKEN_KEY);
+
+		if(!roles.equals(ADMIN_ROLE)){
+			searchParams.put(
+					CONTEST_OWNER_SEARCH_KEY,
+					QueryCondition.builder().value(userID).operation(EQUAL_OPERATOR).build());
+
+		}
 
 		if (!StringUtils.isEmpty(name)) {
 			searchParams.put(
@@ -132,6 +142,7 @@ public class ContestService {
 						contestOpt.get().getExamId(),
 						contestOpt.get().getEndAt().toString(),
 						contestOpt.get().getStartAt().toString(),
+						examRepository.findById(contestOpt.get().getExamId()).get().getExamName(),
 						contestOpt.get().getName());
 
 		return GenerateResponseHelper.generateDataResponse(
@@ -158,7 +169,7 @@ public class ContestService {
 		LocalDateTime startAt = LocalDateTime.parse(command.getStartAt(), formatter);
 		LocalDateTime endAt = LocalDateTime.parse(command.getEndAt(), formatter);
 
-		if (startAt.minus(2, ChronoUnit.DAYS).compareTo(LocalDateTime.now()) < 0) {
+		if (startAt.plus(2, ChronoUnit.DAYS).compareTo(LocalDateTime.now()) < 0) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST,
 					translationService.getTranslation(CONTEST_RANGE_TIME_INVALID)
@@ -182,7 +193,7 @@ public class ContestService {
 		// check a number upload contest
 		try {
 			HttpHeaders headers = new HttpHeaders();
-			headers.add(HttpHeaders.AUTHORIZATION, BEARER_PREFIX + token);
+			headers.add(HttpHeaders.AUTHORIZATION, token);
 			HttpEntity<Object> entity = new HttpEntity<>(headers);
 			UriComponentsBuilder builder =
 					UriComponentsBuilder.fromUriString(CHECK_USER_UPLOAD_URI)
@@ -239,6 +250,7 @@ public class ContestService {
 			headers.setContentType(MediaType.APPLICATION_JSON);
 			CreateExamineeAccountDto dto =
 					CreateExamineeAccountDto.builder()
+							.examName(examOpt.get().getExamName())
 							.contestID(contest.getId())
 							.startAt(contest.getStartAt())
 							.endAt(contest.getEndAt())
