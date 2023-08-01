@@ -337,7 +337,7 @@ public class ContestService {
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(NOT_YOUR_OWNER_CONTEST));
 		}
 
-		if (contestOpt.get().getEndAt().isBefore(LocalDateTime.now())) {
+		if (contestOpt.get().getEndAt().isAfter(LocalDateTime.now())) {
 			return GenerateResponseHelper.generateMessageResponse(
 					HttpStatus.BAD_REQUEST, translationService.getTranslation(CONTEST_NOT_FINISH));
 		}
