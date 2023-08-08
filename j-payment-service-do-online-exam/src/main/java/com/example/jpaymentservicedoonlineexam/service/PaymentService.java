@@ -153,12 +153,12 @@ public class PaymentService {
         Long userId = Long.valueOf(JwtTokenUtil.getuserNameFromToken(tokenSub));
         LocalDate currentDate = LocalDate.now();
         var transactionExist = transactionRepository.findFirstByUserIdOrderByCreatedAtDesc(userId);
-        if(transactionExist.isPresent() && (currentDate.isAfter(transactionExist.get().getPayDate()) || currentDate.equals(transactionExist.get().getPayDate())) && currentDate.isBefore(transactionExist.get().getExpiredDate())){
+        if(responseCode.equals(PAYMENT_SUCCESS) && transactionExist.isPresent() && (currentDate.isAfter(transactionExist.get().getPayDate()) || currentDate.equals(transactionExist.get().getPayDate())) && currentDate.isBefore(transactionExist.get().getExpiredDate())){
                     transactionExist.get().setExpiredDate(amount == MONTH_AMOUNT ? transactionExist.get().getExpiredDate().plusMonths(1) : transactionExist.get().getExpiredDate().plusYears(1));
                     transactionRepository.save(transactionExist.get());
                 return GenerateResponseHelper.generateDataResponse(
                         HttpStatus.OK, Map.of(MESSAGE_KEY, "Extend Success"));
-        } else {
+        } else if(responseCode.equals(PAYMENT_SUCCESS)){
             var transaction = new Transaction();
             transaction.setTransactionNo(transactionNo);
             transaction.setBankCode(bankCode);
@@ -170,7 +170,7 @@ public class PaymentService {
             transaction.setResponseCode(PaymentStatusType.SUCCESS);
             transaction.setTnxRef(txnRef);
             transaction.setPayDate(LocalDate.now());
-            transaction.setExpiredDate(amount == MONTH_AMOUNT ? LocalDate.now().plusMonths(1) : LocalDate.now().plusYears(1));
+            transaction.setExpiredDate(amount.equals(MONTH_AMOUNT) ? LocalDate.now().plusMonths(1) : LocalDate.now().plusYears(1));
             transaction.setUserId(userId);
             HttpStatusCode statusCode = changeRoleOfUserForCheckPayment(userId, PREMIUM_ROLE_NAME, token);
             if (statusCode.isSameCodeAs(HttpStatus.OK)) {
@@ -178,8 +178,9 @@ public class PaymentService {
                 return GenerateResponseHelper.generateDataResponse(
                         HttpStatus.OK, Map.of(MESSAGE_KEY, "Create Transaction Success", NEW_ACCESS_TOKEN, JwtTokenUtil.generateToken(getUser(userId).getUsername(),getUser(userId).getEmail(), PREMIUM_ROLE_NAME, String.valueOf(userId))));
             } else return GenerateResponseHelper.generateDataResponse(
-                    HttpStatus.OK, Map.of(MESSAGE_KEY, "Create Transaction Fail"));
-        }
+                    HttpStatus.BAD_REQUEST, Map.of(MESSAGE_KEY, "Create Transaction Fail"));
+        } else return GenerateResponseHelper.generateDataResponse(
+                HttpStatus.BAD_REQUEST, Map.of(MESSAGE_KEY, "Create Transaction Fail"));
     }
 
 

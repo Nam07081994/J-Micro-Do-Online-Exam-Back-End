@@ -9,12 +9,11 @@ public class StringConstant {
     public static String PLUS_STRING = "+";
     public static String REGEX_PAYMENT_STRING = "%20";
     public static final String MESSAGE_KEY = "message";
-    public static final String NEW_ACCESS_TOKEN = "access-token";
+    public static final String NEW_ACCESS_TOKEN = "accessToken";
     public static final String DATA_KEY = "data";
     public static final String BEARER_PREFIX = "Bearer ";
     public static final String PAYMENT_SUCCESS = "00";
-    public static final Long MONTH_AMOUNT = Long.valueOf("200000");
-    public static final Long YEAR_AMOUNT = Long.valueOf("1680000");
+    public static final Long MONTH_AMOUNT = 200000L;
     public static final String PREMIUM_ROLE_NAME = "USER_PREMIUM";
     public static final String USER_ROLE_NAME = "USER";
 

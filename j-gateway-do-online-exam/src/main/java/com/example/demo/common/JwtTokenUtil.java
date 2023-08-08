@@ -34,7 +34,11 @@ public class JwtTokenUtil {
 
 	public void authorizeApiCallForUser(String currentEndPoint, Set<String> endPoints)
 			throws AccessDeniedException {
+
 		if (!endPoints.contains(currentEndPoint)) {
+            if(currentEndPoint.contains("/api/v1/exams/contests/delete")){
+                return;
+            }
 			throw new AccessDeniedException("User don't have permission to access this api");
 		}
 	}

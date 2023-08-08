@@ -50,7 +50,7 @@ public class PaymentController {
         );
     }
 
-    @PostMapping("/create-transaction")
+    @GetMapping("/create-transaction")
     public ResponseEntity<?> createTransaction(@RequestHeader(AUTHORIZATION) String token,
                                                @RequestParam(name = "vnp_Amount") Long amount,
                                                @RequestParam(name = "vnp_BankCode") String bankCode,
