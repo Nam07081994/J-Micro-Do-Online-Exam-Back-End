@@ -2,6 +2,8 @@ package com.example.demo.controller;
 
 import com.example.demo.command.CreateAccountsExamCommand;
 import com.example.demo.command.LoginAccountExamCommand;
+import com.example.demo.command.SendEmailAccountExpiredCommand;
+import com.example.demo.command.SendMailCommand;
 import com.example.demo.service.AccountExamService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.validation.Valid;
@@ -25,5 +27,10 @@ public class AccountExamController {
 	public ResponseEntity<?> registerAccountsExam(
 			@RequestBody @Valid CreateAccountsExamCommand command) {
 		return accountExamService.registerAccountsExam(command);
+	}
+
+	@PostMapping("/sendEmail")
+	public String sendEmails(@RequestBody @Valid SendEmailAccountExpiredCommand command){
+		return accountExamService.sendMail(command.getEmail(), command.getBody(), command.getSubject());
 	}
 }

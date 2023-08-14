@@ -54,11 +54,12 @@ public class JpaConfig {
 				try {
 					userId = JwtTokenUtil.getUserInfoFromToken1(token, "aud");
 					userName = userRepository.findById(Long.valueOf(userId)).get().getUserName();
+					return Optional.of(userName);
 				} catch (JsonProcessingException e) {
 					e.printStackTrace();
 				}
 			}
-			return Optional.of(userName);
+			return Optional.of("system");
 		};
 	}
 }

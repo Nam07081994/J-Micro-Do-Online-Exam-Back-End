@@ -1,11 +1,10 @@
 package com.example.demo.controller;
 
-import com.example.demo.command.CommonSearchCommand;
-import com.example.demo.command.LoginCommand;
-import com.example.demo.command.RegisterCommand;
-import com.example.demo.command.UpdateUserInfoCommand;
+import com.example.demo.command.*;
 import com.example.demo.common.annotations.MultipleFileExtension;
 import com.example.demo.common.response.CommonResponse;
+import com.example.demo.dto.UserDto;
+import com.example.demo.entity.User;
 import com.example.demo.exceptions.ExecuteSQLException;
 import com.example.demo.exceptions.InvalidDateFormatException;
 import com.example.demo.service.AuthenticationService;
@@ -90,5 +89,15 @@ public class AuthenticationController {
 	public ResponseEntity<?> checkUserAction(
 			@RequestHeader("Authorization") String token, @RequestParam("flag") int flag) {
 		return authenticationService.checkUserAction(token, flag);
+	}
+
+	@PostMapping("/update/role")
+	public ResponseEntity<?> updateUserRole(@RequestBody UpdateUserRoleCommand command) {
+		return authenticationService.updateUserRole(command.getUserId(), command.getRoleName());
+	}
+
+	@GetMapping("/user-info")
+	public UserDto getUserEmail(@RequestParam("userId") Long userId){
+		return authenticationService.getUserEmailByUserId(userId);
 	}
 }

@@ -178,6 +178,31 @@ spring:
                 key-resolver: "#{@userKeyResolver}"
                 redis-rate-limiter.replenishRate: 2
                 redis-rate-limiter.burstCapacity: 2
+#-------------------------------------------------------------------------------
+        - id: payment-service
+          uri: http://localhost:8769/
+          predicates:
+            - Path=/api/v1/payment/**
+          filters:
+            #config authentication filter
+            - name: CircuitBreaker
+              args:
+                name: authen_services_circuit_breaker
+                fallbackUri: forward:/api/v1/circuit-breaker/fallback
+              metadata:
+                health-check-uri: /actuator/health
+                health-check-header: X-Custom-Health-Check-Header
+                circuit-breaker:
+                  name: authen_services_circuit_breaker
+                  fallback-uri: forward:/api/v1/circuit-breaker/fallback
+                  reset-timeout: 5000
+            - name: AuthenticationFilter
+            #config rate limiter filter
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 2
 #openai config
 springdoc:
   enable-native-support: true
